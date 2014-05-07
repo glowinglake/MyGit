@@ -1,3 +1,6 @@
+// scratch of some coding problem solutions(C++)
+// search and find anything interesting
+
 class Solution {
 public:
     vector<int> inorderTraversal(TreeNode *root) {
@@ -3683,3 +3686,1370 @@ int main(){
 	cin>>x;
 	s.solveNQueens(x);
 }
+
+
+// getFriendsListForUser
+// getPurchasesForUser
+
+struct productCnt {
+	string product;
+	int cnt;
+};
+bool comp(productCnt &a, product &b) {
+	return a.cnt > b.cnt ;
+}
+list<string> generateRank(string user) {
+	list<string> friends = getFriendsListForUser(user);
+	list<string> recommendation;
+	if(friends.size() == 0) {
+		// no friends, no rec
+		return recommendation;
+	}
+	map<string, int> productCount;
+	for(int i=0; i<friends.size(); i++) {
+		list<string> purchaseList = getPurchasesForUser(friends[i]);
+		for(int p=0; p<purchaseList; p++) {
+			if(map.find(purchaseList[p]) == map.end())
+				productCount[purchaseList[p]] = 1;
+			else
+				productCount[purchaseList[p]]++;
+		}
+	}
+	vector<productCnt> v; // used to store purchase-count pair and do sorting
+	list<string> myList = getPurchasesForUser(user);
+	set<string> myOwnPurchase;
+	for(auto ii = myList.begin();ii != myList.end(); ii++) {
+		myOwnPurchase.insert(*ii);
+	}
+	for(auto mi = productCount.begin(); mi != productCount.end(); mi++) {
+		if(myOwnPurchase.find(mi->first) != myOwnPurchase.end())
+			// user already bought this
+			continue;
+		productCnt pc;
+		pc.product = mi->first;
+		pc.cnt = mi->second;
+		v.push_back(pc);
+	}
+	// sort in reverse order with comp()
+	sort(v.begin(), v.end(), comp);
+	for(auto vi = v.begin(); vi != v.end(); vi++) {
+		recommendation.push_back(vi->first);
+	}
+	return recommendation;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Rocket Fuel
+code challenge: auto racer
+电面1:
+第一题：贪心
+Given a number, can you remove k digits from the number so that the new
+formatted number is smallest possible.
+input: n = 1432219, k = 3
+output: 1219
+
+vector<int> removeKDigit(vector<int> num, int k) {
+	if(k==0)
+		return num;
+	int m=INT_MAX;
+	int mi=0;
+	for(int i=0; i<=k; i++) {
+		if(num[i]<m) {
+			mi=i;
+			m=num[i];
+		}
+	}
+	for(int i=0; i<=mi; i++)
+		num.erase(num.begin());
+	vector<int> subRes=removeKDigit(num, k-mi);
+	subRes.insert(subRes.begin(), m);
+	return subRes;
+}
+		
+		
+第二题：DP
+BT(binary tree), want to find the LIS(largest independent set) of the BT
+LIS: if the current node is in the set, then its chilren should not be in
+the set. So that the set has the largest number of nodes.
+map<node*, int> size;
+int LIS(node* n) {
+	if(!n) return 0;
+	if(size.find(n) != size.end())
+		return size[n];
+	int useCur=1;
+	useCur+=(n->left ? LIS(n->left->left)+LIS(n->left->right) : 0) + (n->right ? LIS(n->right->left)+LIS(n->right->right)) : 0);
+	int dontUseCur=0;
+	dontUseCur+=LIS(n->left)+LIS(n->right);
+	int res=max(useCur, dontUseCur);
+	size[n]=res;
+	return res;
+}
+
+电面2：
+第一题：Median of Two Sorted Arrays
+第二题：DP
+一个二维数组，元素是0或1，找出最大的由1构成的"X"形状
+
+onsite:
+1. print all subsets
+   system design(N topics, publishers, subscribers, scalability, distributed)
+   the most frequent urls in the past minute, hour, day
+2. manager interview
+   code review
+3. shortest path between two nodes of a tree(no parent pointer)
+4. machine learning(不懂)
+5. machine learning(不懂)
+
+Rocket Fuel是自己投的，因为在网上看到code challenge挺有意思。onsite的时候了
+解到他家最近要搬进新楼里，应该招人很多，大家可以试一试，题目不简单
+
+Google:
+电面：
+remove duplicate lines of a file(what if the file is very large which could
+not be held in the main memory)
+开关灯问题
+Trapping Rain Water(leetcode)
+sometimes a program works, sometimes it does not. Possible reasons
+multithreading, multiprocess, different input, different memory access(cache hit/miss), rely on random numbers
+
+
+onsite:
+1. clone directed graph(recursive, non-recursive)
+   longest common suffix of two linked list
+//first push both to two stacks, then pop and compare.
+vector<int> longestCommon(node* a, node* b) {
+	stack<node> sa, sb;
+	while(a) {
+		sa.push(a);
+		a=a->next;
+	}
+	while(b) {
+		sb.push(b);
+		b=b->next;
+	}
+	vector<int> res;
+	while(!sa.empty() && !sb.empty()) {
+		if(sa.top()->val==sb.top()->val){
+			res.push_back(sa.top());
+			sa.pop();
+			sb.pop();
+		} else
+			break;
+	}
+	reverse(res.begin(), res.end());
+	return res;
+}
+
+
+   data structure design
+2. how many (m, n) pairs such that m*m+n*n<N
+int count(int N) {
+	if(N==0) return 0;
+	int m=0, n=sqrt(N);
+	if(n*n==N)
+		n--;
+	int cnt=0;
+	while(n>=0 && m*m+n*n < N) {
+		cnt=cnt+n+1;
+		cout<<n<<"  "<<m<<endl;
+		m++;
+		bool negN=false;
+		while(m*m+n*n >= N) {
+			n--;
+			if(n<0) {
+				negN=true;
+				break;
+			}
+		}
+		if(negN)
+			break;
+	}
+	return cnt;
+}
+
+// solution 2
+int count(int N) {
+	int m=0, n=sqrt(N);
+	int cnt=0;
+	while( m*m < N ) {
+		while(m*m + n*n >= N)
+			n--;
+		cnt+=n+1;
+		cout<<m<<" "<<n<<endl;
+		m++;
+	}
+}
+
+   线索化二叉树
+3. 判断一个点是否在一个凸多边形内, O(n), O(logn)
+4. group items(BFS)
+   MapReduce(filter a collection of documents, the words which occur more
+than 5000 times)
+
+google面的不好，因为实在是太累了，幸运的是还是给offer了。
+
+linkedin
+电面1：
+第一题：给一个words list, 输入两个单词，找出这两个单词在list中的最近距离(先
+写了一个没有预处理的，又写了一个预处理建index的)
+['green', 'blue', 'orange', 'purple', 'green']  f.distance(list, 'blue', '
+green') # output 1
+第二题：类似binary search的一题，要注意boundary case
+
+电面2：
+binary tree level order traversal, 写了三种方法。。。(BFS用arraylist，类似
+DFS，BFS用queue)
+
+onsite:
+1. romanToInt, intToRoman,
+   N points, m nearst ones
+2. 双向链表，每个node可能都有父节点和子节点，每个父子节点又是一个链表。把它
+拍扁，顺序随意，O(1)空间复杂度
+//assume each parent/child node could only be the head of a sub list
+void toEnd(node* &end) {
+	while(end->next)
+		end=end->next;
+}
+node* flatList(node* head) {
+	if(!head) return NULL;
+	node *end=head, *cur=head;
+	toEnd(end);
+	while(cur) {
+		if(cur->parent) {
+			end->next=cur->parent;
+			cur->parent->child=NULL;
+			cur->parent=NULL;
+			toEnd(end);
+		} else if(cur->child) {
+			end->next=cur->child;
+			cur->child->parent=NULL;
+			cur->child=NULL;
+			toEnd(end);
+		} else {
+			cur=cur->next;
+		}
+	}
+	return head;
+}
+
+   edit distance
+3. system deisign: design amazon product page
+product id, name, manufacture, price, inventory.
+description, review.
+
+4. project presentation
+5. group fit
+
+
+FLAG干货
+
+Linkedin
+
+phone1：烙印
+lowest common ancestor w/ and w/o parent pointer
+
+//w/o
+node *anc = NULL;
+bool find(node* n, int v1, int v2) {
+	if(!n) return false;
+	bool left=find(n->left, v1, v2);
+	bool right=find(n->right, v1, v2);
+	if(left && right) {
+		anc=n;
+		return true;
+	} else if(left || right) {
+		if(n->val == v1 || n->val == v2) {
+			anc=n;
+			return true;
+		} else
+			return true;
+	} else if(n->val == v1 || n->val == v2) 
+		return true;
+	else
+		return false;
+}
+
+phone2：国人
+search in rotated sorted array
+leetcode has both version
+
+onsite:
+1.两个国人
+implement addInterval(start, end) and getcoverage(),
+2.两个国人
+talk projects and some behavior question
+3.烙印
+lunch, talk about technologies interest
+4.亚裔，不确定是否国人
+Manager, talked a lot of behavior questions, interest and projects
+5.烙印
+Design: tinyurl
+6.烙印+小白
+1.exclusive array, give an arr1, return a new arr2, arr2[i] is the
+multiplication of all elements in arr1 except arr1[i]
+2.boolean isMirrorTrees(tree1, tree2)/inplace convert a tree to its mirror
+tree/create a new mirror tree
+3.find the intersection of two linked list(do not use hashmap)
+
+
+Amazon
+
+phone1: 烙印
+Given a list of test results (each with a test date, Student ID, and the
+student’s Score), return the Final Score for each student. A student’s
+Final Score is calculated as the average of his/her 5 highest test scores.
+You can assume each student has at least 5 test scores.
+
+phone2:白男
+1.大数plusOne
+2.给你一个按字母顺序排好的字典（但你不知道字母顺序,非英语），要求找出字母顺序
+例：
+单词顺序：
+    wrt
+    wrf
+    er
+    ett
+    rftt
+字母顺序：
+    w,e,r,t,f
+
+topo sort
+	
+onsite:
+1. 白男
+class MagicNumber{
+boolean isMagicNum(long num);
+long nextMagic(long num){
+    while(!isMagicNum(num)){
+    num++;
+}
+return num;
+}
+}
+consider a data structure to improve the nextMagic(long num)
+2. 烙印
+behavior questions and text editor design(insert, add, search, cut, paste)
+3. 白男
+大数加法 (int数组表示大数，每一个元素代表一个2^31进制数字)
+4. 日本人manager
+lunch interview:
+    4.1 describe a time you are stressful to meet a deadline
+    4.2 describe a time you feel most proud in your professional career
+    4.3 what would you change in your past project if you have a chance
+5. 白男
+give API: List<Movie> getMovies(Actor a);  List<Actor> getActors(Movie m);
+implement: int findDistance(Actor a, Actor b)
+6. 白男
+System design, open question, give your solution, describe pros and cons
+
+
+Google
+phone： 白男
+1. remove duplicates of the array in place
+2. 一道BFS题。具体是什么记不清了
+
+on-site:
+
+1. 白男
+count islands in a m*n grid （一个联通的值为1的区域被视为一个island）
+例：
+    0011010
+    0010010
+    1000110
+    0000001
+
+    4 islands found in above grid
+Design： copy and shuffle lines in a 8 GB file, memory limit 1 GB (you are
+given multiple machines)
+2.国人
+void minMSwap(int[] num, int m), return the min array after m swaps， each
+swap happens only between two adjacent elements([4,2,1,3], 2 return [1,4,2,3
+] )
+4,2,1,3
+4,1,2,3
+1,4,2,3
+design a protocol to syncing gmail messages among different client apps
+
+3.小白
+give a list of <id, parent id, weight>, build the tree(not limited to a
+binary tree), then update each node’s sum value(sum is the sum of all its
+descendents’ weights)
+int[] num incremental(大数加一)
+design interface for memory cache
+
+4. 国女
+find a intersection to build office so that the sum of all employees’
+commute distances is minimum. （the map is represented as a m*n grid, you
+are given each employee’s coordination, they can only move in up-down and
+left-right directions）
+
+5. 白男manager
+How to find median of unsorted integers in linear time
+Design the system architecture(FE and BE) for above service in a distributed
+system (find optimal office location).
+
+
+FB
+phone: 小白
+word break, suffixtree
+
+Onsite:
+1. 越南人？
+Talked the resume, project and behavior questions. lowest common ancestor
+with parent pointer.
+2. 白男
+is valid binary search tree (handle edge case), if the tree size exist
+memory limit, how to handle?
+3. 白男
+Design question, FB search
+4. 国人
+give a time, search in a log file. 需要自己提问需求，并考虑边界情况。
+    00:23 *****
+    00:24 *****
+    00:56 *****
+    01:02 *****
+
+how to distribute the work to 10 servers?
+5. 白男
+Celebrity Problem
+
+
+
+发信人: seecloud (seecloud), 信区: JobHunting
+标  题: 转载的A家onsite 面经
+发信站: BBS 未名空间站 (Sat Feb 22 05:56:36 2014, 美东)
+
+想知道这属于什么难度的 是不是不同的组难度有差别？
+
+Round 1 (Written)
+1. Given an array, output an array where every index conains nearest
+greatest element to that element on right side.
+
+void nearestPeak(int arr[], int len, int out[]) {
+	if(len < 2) return;
+	int great = arr[len-1];
+	out[len-2] = great;
+	for(int i=len-3; i>=0; i--) {
+		if(arr[i+1]>arr[i+2])
+			great=arr[i+1];
+		out[i]=great;
+	}
+}
+
+2. Program to convert sorted array to Binary Search Tree
+3. Find first non-repeating character in String
+ex: geeksforgeeks: f
+geeksforgeeksFirst:o
+
+Round 2 (F2F)
+1. Given linked list as a-x-b-y-c-z
+output it as a-b-c-z-y-x
+that is reverse alternate element and append to end of list
+
+void foo(node* n, node* left, node* right) {
+	if(!n) return;
+	left->next=n;
+	right->next=n->next;
+	n=n->next->next;
+	left=left->next; right=right->next;
+	foo(n, left, right);
+}
+void do(){
+	foo(n, dummy1, dummy2);
+	reverse(dummy2);
+	append dummy2 to dummy1
+}	
+
+2. Output nearest number greater than given number such that output is
+palindrome
+ex: 121:131
+900:909
+99:101
+vector<int> nearestPal(vector<int> n, int num) {
+	int len=n.size();
+	vector<int> res;
+	IF(len==1) {res.push_back(n[0]+1); return res;}
+	if(len%2 == 1) {
+		int a=len/2-1; int b=len/2+1;
+		if(n[a]>=n[b]) ...
+
+
+Round 3 (F2F)
+1. Vertical Sum in Tree( I told him I know the solution, he proceeded
+further)
+2. Given stream of Strings find top 5 words with maximum frequency or count
+3. Given 2 nodes in Binary Tree find distance between them
+
+Round 4 (F2F with hiring manager)
+1. Projects done so far, HR questions
+2. Design Linkedin and find till 2nd level connections and path between 2
+connection
+for ex: if A is friend of B which is friend of C
+print between A and C A-B-C
+3. Programming language: Java
+About synchronisation, serialization, transient and volatile keyword,
+Singleton Class
+
+Round 5 (Bar Raiser)
+1. Count Inversion in array that is if i a[j]
+Told the solution nlogn of divide and conquer. He asked another solution,
+then told by inserting in BST and whenever node goes to left side then
+adding 1 and number of children on right side . We have to keep track of
+count of right subtree in every node
+
+Round 6 (F2F)
+1. HR questions (Why leaving company, projects, SWOT)
+2. Program to check for mirror tree
+3. Data Structure so that push, pop, getmin, getmax O(1) (using 3 stacks)
+4. Data Structure so that push, pop, pop min, pop max
+Told Solution till O(logn) by using min heap, max heap with pointers to
+doubly linked list nodes
+
+
+
+// count and evict
+#include <iostream>
+#include <vector>
+using namespace std;
+int count(int num, int div) {
+	vector<int> v(num, 0);
+	for(int i=0; i<num; i++)
+		v[i]=i+1;
+	int pos=0, cur=1;
+	while(v.size()>1) {
+		pos++;
+		if(pos>=v.size())
+			pos=0;
+		cur++;
+		if(cur%div == 0) {
+			v.erase(v.begin()+pos);
+			pos--;
+			if(pos<0) pos=0;
+		}
+	}
+	return v[0];
+}
+
+int main() {
+	cout<<count(6,3);
+	return 0;
+}
+
+
+// count in an array where all element appear 3 times, except one, which appears 1 time
+#include <iostream>
+using namespace std;
+int count(int A[], int len) {
+	int ones=0, twos=0;//, zeros=0xffffffff;
+	for(int i=0; i<len; i++) {
+		int newOnes=ones^(~twos & A[i]);
+		int newTwos=(ones&A[i]) | (twos & ~A[i]);
+		//int newZeros=twos&A[i];
+		ones=newOnes;
+		twos=newTwos;
+		
+	}
+	return ones;
+	
+}
+
+int main() {
+	int A[]={
+		2,3,2,4,4,2,2,2,4,2
+	};
+	cout<<count(A, 10);
+}
+
+// build bst from linked list
+node* build(node * &n, int len) {
+	if(len<=0) {
+		return NULL;
+	}
+	int leftLen=len/2;
+	node* leftChild=build(n, leftLen-1);
+	node* parent=n;
+	parent->left=leftChild;
+	n=n->next;
+	node* rightChild=build(n, len-leftLen);
+	parent->right=rightChild;
+	n=n->next;
+	return parent;
+}
+	
+// BST to sorted double LL
+void convert(node* n, node* &left, node* &right) {
+	node* leftSubLeft=NULL;
+	node* leftSubRight=NULL;
+	node* rightSubLeft=NULL;
+	node* rightSubRight=NULL;
+	if(n->left) {
+		convert(n->left, leftSubLeft, leftSubRight);
+		n->left=leftSubRight;
+		leftSubRight->right=n;
+		left=leftSubLeft;
+	} else {
+		left=n;
+	}
+	if(n->right) {
+		convert(n->right, rightSubLeft, rightSubRight);
+		n->right=rightSubLeft;
+		rightSubLeft->left=n;
+		right=rightSubRight;
+	} else {
+		right=n;
+	}
+}
+	
+	
+#include <iostream>
+#include <vector>
+using namespace std;
+//  compute coin
+void genRec(int t, int cand[], int cans, int clen, vector<int>& cur) {
+	if(t<0) return;
+	if(t==0) {
+		for(int i=0; i<cur.size(); i++)
+			cout<<cur[i];
+		cout<<endl;
+		return;
+	}
+	if(cans < clen) {
+		cur.push_back(cand[cans]);
+		genRec(t-cand[cans], cand, cans, clen, cur);
+		cur.pop_back();
+		genRec(t, cand, cans+1, clen, cur);
+	}
+}
+int main() {
+	int candidate[]={5,2,1};
+	vector<int> current;
+	genRec(17, candidate, 0, 3, current);
+}
+
+// is graph a tree?
+#include <vector>
+#include <map>
+#include <set>
+#include <iostream>
+using namespace std;
+
+struct node{
+	int val;
+	vector<node*> nodes;
+};
+void BFS(node& n, set<int>& vNums) {
+	if(vNums.find(n.val) != vNums.end())
+		return;
+	vNums.insert(n.val);
+	for(vector<node*>::iterator ni = n.nodes.begin();  ni != n.nodes.end(); ++ni) {
+		BFS(*(*ni), vNums);
+	}
+};
+	
+bool isTree(vector<pair<int,int> >& edges) {
+	map<int, node> visited;
+	for(vector<pair<int, int> >::iterator it=edges.begin(); it!=edges.end(); ++it) {
+		cout<<"iteration"<<endl;
+		if(visited.find((*it).first) ==visited.end()) {//not found
+			node one;
+			one.val=(*it).first;
+			visited[(*it).first]=one;
+			cout<<"insert "<<one.val<<endl;
+		}
+		if(visited.find((*it).second) ==visited.end()) {//not found
+			node one;
+			one.val=(*it).second;
+			visited[(*it).second]=one;
+			cout<<"insert "<<one.val<<endl;
+		}
+		visited[(*it).first].nodes.push_back(&visited[(*it).second]);
+		visited[(*it).second].nodes.push_back(&visited[(*it).first]);
+	}
+	if(visited.size() != edges.size()+1) {
+		cout<<visited.size()<<" edge size "<<edges.size()<<endl;
+		return false;
+	} 
+	set<int> visitedNums;
+	BFS(visited.begin()->second, visitedNums);
+	return visitedNums.size() == visited.size();
+};
+
+int main() {
+	vector<pair<int,int> > edges;
+	pair<int, int> e1, e2, e3;
+	e1.first=1; e1.second=2;
+	e2.first=2; e2.second=3;
+	e3.first=5; e3.second=4;
+	
+	edges.push_back(e1);
+	edges.push_back(e2);
+	edges.push_back(e3);
+	
+	cout<<isTree(edges);
+	
+}
+	
+	
+// inorder
+void foo(node* n) {
+	if(n) {
+		foo(n->left);
+		(*func)(n);
+		foo(n->right);
+	}
+}
+void foo2(node* root) {
+	stack<node*> st;
+	if(!root) return;
+	//st.push(root);
+	node* cur=root;
+	while(1) {
+		while(cur) {
+			st.push(cur);
+			cur=cur->left;
+		}
+		if(st.empty()) break;
+		cur=st.top();
+		st.pop();
+		(*func)(cur);
+		cur=cur->right;
+	}
+}
+// preorder
+void preOrder(node* root) {
+	stack<node*> st;
+	if(!root) return;
+	st.push(root);
+	while(st.empty()==false) {
+		node* n=st.top();
+		st.pop();
+		cout<<n->val<<endl;
+		if(n->right) st.push(n->right);
+		if(n->left) st.push(n->left);
+	}
+}
+// postOrder
+void postOrder(node* root) {
+	stack<node*> st;
+	if(!root) return;
+	node* previous=NULL;
+	while(!st.empty()) {
+		node* cur=st.top();
+		if(cur->right && previous==cur->right || !cur->right && cur->left && previous==cur->left || !cur->right && !cur->left) {
+			cout<<cur->val<<endl;
+			st.pop();
+			previous=cur;
+		} else {
+			if(cur->right) st.push(cur->right);
+			if(cur->left) st.push(cur->left);
+		}
+	}
+}
+	
+	
+	
+// Trie implementation	
+#include <string>
+#include <vector>
+#include <iostream>
+using namespace std;
+
+#define CHARSIZE 26
+class Trie {
+public:
+struct node {
+	vector<node*> child;
+	bool isWord;
+	node() : isWord(false), child(vector<node*>(CHARSIZE, false)) {};
+};
+void insert(string s) {
+	insertChar(s, &root);
+}
+void insertChar(string s, node* n) {
+	if(s.empty() == true) {
+		n->isWord = true;
+		return;
+	}
+	char c = s[0];
+	if(!n->child[c-'a'])
+		n->child[c-'a'] = new node;
+	insertChar(s.substr(1), n->child[c-'a']);
+}
+bool find(string s) {
+	return findChar(s, &root);
+}
+bool findChar(string s, node* n) {
+	if(s.empty())
+		return n->isWord;
+	char c=s[0];
+	if(!n->child[c-'a'])
+		return false;
+	else
+		return findChar(s.substr(1), n->child[c-'a']);
+}
+void remove(node* n) {
+	if(!n) return;
+	for(int i=0; i<CHARSIZE; i++) {
+		remove(n->child[i]);
+	}
+	cout<<"removing a node"<<endl;
+	delete n;
+}
+~Trie() {
+	remove(&root);
+}
+private:
+	node root;
+};
+
+int main() {
+	Trie trie;
+	trie.insert("abc");
+	trie.insert("abcd");
+	trie.insert("ks");
+	trie.insert("phd");
+	trie.insert("wow");
+	cout<<trie.find("abc")<<endl;
+	cout<<trie.find("ab")<<endl;
+	cout<<trie.find("abcd")<<endl;
+	cout<<trie.find("abdc")<<endl;
+	cout<<trie.find("")<<endl;
+	trie.insert("");
+	cout<<trie.find("")<<endl;
+	return 0;
+}
+
+// end Trie	
+	
+	
+//UNION FIND
+#include <iostream>
+#include <map>
+#include <set>
+using namespace std;
+
+template <class T>
+class UnionFind {
+	public:
+		bool Uni(T a, T b) {
+			if(member.find(a)==member.end() || member.find(b)==member.end())
+				return false;
+			leader[Find(b)] = Find(a);
+			return true;
+		}
+		T Find(T a) {
+			if(leader[a] != leader[leader[a]])
+				leader[a] = Find(leader[a]);
+			return leader[a];
+		}
+		bool add(T a) {
+			if(member.find(a) == member.end()) {
+				member.insert(a);
+				leader[a] = a;
+				return true;
+			}
+			std::cout<<"already member"<<endl;
+			return false;
+		}
+	private:
+		map<T, T> leader;
+		set<T> member;
+};
+int main() {
+	UnionFind<int*> uf;
+	int arr[]={
+		1,2,3,4,5,6,7
+	};
+	for(int i=0;i<7; i++)
+		uf.add(&arr[i]);
+	if(uf.Find(&arr[0]) == uf.Find(&arr[1]))
+		cout<<"0 same 1"<<endl;
+	else
+		cout<<"not same"<<endl;
+	uf.Uni(&arr[0], &arr[1]);
+	if(uf.Find(&arr[0]) == uf.Find(&arr[1]))
+		cout<<"0 same 1"<<endl;
+	else
+		cout<<"not same"<<endl;
+	uf.Uni(&arr[1], &arr[6]);
+	uf.Uni(&arr[6], &arr[3]);
+	if(uf.Find(&arr[0]) == uf.Find(&arr[3]))
+		cout<<"0 same 3"<<endl;
+	else
+		cout<<"not same 0 3"<<endl;
+	if(uf.Find(&arr[0]) == uf.Find(&arr[2]))
+		cout<<"0 same 2"<<endl;
+	else
+		cout<<"not same 0 2"<<endl;
+	return 0;
+}
+// End Union Find
+
+
+
+// Calendar Class
+struct eventNode {
+	string content;
+	clock_t start;
+	clock_t end;	
+};
+	
+class comp {
+	bool operator<(eventNode &e1, eventNode &e2) {
+		return e1.start < e2.start;
+	}
+};
+
+set<eventNode, comp> q;
+
+void notify(eventNode e) {
+	cout<<e.content<<endl;
+}
+
+bool fin;
+// main thread, periodically wake up and check / dispatch calendar event
+void processQueue() {
+	while (fin) {
+	if(q.empty())
+		sleep(5);
+	else {
+		event=*q.begin();
+		clock_t curTime = clock();
+		if(equal(curTime, event.start)) {
+			// handle event
+			thread t(notify, event);
+		} else if(curTime < event.start) {
+			std::this_thread::sleep_for(event.start - curTime);
+		}
+	}
+}
+
+bool insertEvnet(eventNode e) {
+	q.insert(e);
+	wakeUpProcessQueue(); // wake up main thread
+	return true;
+}
+
+bool removeEvent(eventNode e) {
+	q.erase(e);
+	wakeUpProcessQueue();
+	return true;
+}
+void finishCalendar() {
+	fin = true;
+}
+
+void run() {
+	fin = false;
+	thread processThread(processQueue);
+}
+
+// End Calendar class
+
+
+// getMinNumber with m move
+int getMinNumber(vector<int> arr, int m) {
+	set<pair<int,int> > val2Idx;
+	for(int i=0; i<arr.size(); i++) {
+		pair<int, int> item={arr[i], i};
+		set.insert(item);
+	}
+	int curFillIndex=0;
+	while(m) {
+		pair<int, int> top = *val2Idx.begin();
+		val2Idx.erase(val2Idx.begin());
+		if(top.second - curFillIndex <= m) {
+			cout<<top.first;
+			m = m - (top.second - curFillIndex);
+			curFillIndex++;
+		} 
+	}
+	return 0;
+}
+
+// Euler cycle
+set<Edge*> usedEdge;
+doubleLL<Node*> findACycle(node *n, set<Node*>& haveUnusedEdges) {
+	doubleLL<Node*> res;
+	Edge* edge = getAnUnusedEdge(n);
+	if(!edge)
+		continue;
+	haveUnusedEdges.push(n);
+	usedEdge.insert(edge);
+	res.push_back(n);
+	node *cur=edge.otherSide(n);
+	while(cur != n) {
+		Edge * e = getAnUnusedEdge(cur);
+		haveUnusedEdges.insert(cur);
+		usedEdge.insert(e);
+		res.push_back(cur);
+		cur = e.otherSide(cur);
+	}
+	return res;
+}
+
+void buildDoubleLinkedList(Graph *g) {
+	doubleLL<Node*> nodes;
+	set<Node*> haveUnusedEdges;
+	haveUnusedEdges.insert(g->nodes().begin());
+	while(haveUnusedEdges.empty() == false) {
+		Node* one = haveUnusedEdges.begin();
+		haveUnusedEdges.erase(haveUnusedEdges.begin());
+		doubleLL<Node*> onePath = findACycle(one, haveUnusedEdges);
+		if(onePath.size() > 0) {//append onePath to existing result, nodes
+			doubleLL.appendAfterNode(one, onePath);
+		}
+	}
+	return nodes;
+}
+		
+// naive hash table with chaining for collision handling
+template<class K, V>
+class Hash {
+	public:
+	struct node{
+		K key;
+		V val;
+		node* prev;
+		node* next;
+		node(K k, V v) : key(key), V(v), next(NULL), prev(NULL) {};
+	};
+	int size;
+	node* table;
+	Hash(int tableSize) : size(tableSize) {
+		table = new node*[size];
+		for(int i=0; i<size; i++)
+			table[i] = NULL;
+	};
+	~Hash() {
+		for(int i=0; i<size; i++)
+			remove(table[i]); // remove linkedlist
+		delete table;
+	}
+	int slot(K key) {
+		return hash(K) % size;
+	}
+	void insert(K key, V val) {
+		int s = slot(key);
+		if(!table[s]) {
+			node* n=new(key, val);
+			table[s]=n;
+		} else { // collision
+			node* cur=table[s];
+			while(cur && cur->key != key) {
+				cur = cur->next;
+			}
+			if(!cur) {// no same key in table
+				node *n=new(key, val);
+				n->next = table[s];
+				table[s]->prev = n;
+				table[s] = n;
+			} else {
+				cur->val = val;
+			}
+		}
+	}
+	bool get(K key) {};
+	V& get(K key) {};
+	bool remove(K key) {
+		if(get(key) == false)
+			return false;
+		int s = slot(key);
+		node* cur=table[s];
+		while(cur && cur->key != key) {
+			cur = cur->next;
+		}
+		// must have found cur == key
+		node *prevNode = cur->prev;
+		node *nextNode = cur->next;
+		if(prevNode)
+			prevNode->next = nextNode;
+		else
+			table[s] = nextNode;
+		if(nextNode)
+			nextNode->prev = prevNode;
+		delete cur;
+	}
+};
+			
+			
+// Dijkstra
+// DijkNode is a symbol for representing node in the original graph
+class DijkNode{
+	vector<DijkNode*> neighbours;
+	int dis; // distance at current stage
+	bool operator<(DijkNode& n1) {
+		return this->dis > ni.dis;
+	}
+};
+unordered_map<DijkNode*, int> shortest; //decided distance
+unordered_map<pair<DijkNode*, DijkNode*>, int> edges;
+priority_queue<DijkNode*> pq;
+int shortestPath(DijkNode* src, DijkNode* dest, vector<DijkNode*> nodes) {
+	// set all distance to infinity
+	for(auto ni=nodes.begin(); ni != nodes.end(); ni++)
+		*ni->dis = INT_MAX;
+	src->dis = 0;
+	pq.push(src);
+	while(!pq.empty()) {
+		DijkNode* top = pq.top(); pq.pop();
+		if(shortest.find(top) != shortest.end())
+			continue;
+		shortest[top] = top->dis;
+		if(top == dest)
+			break;
+		// find all children, update their dis at current stage
+		for(auto ni = top->neighbours.begin(); ni != top->neighbours.end(); ni++) {
+			if(shortest.find(*ni) != shortest.end()) // this neighbour's distance has been decided
+				continue;
+			int newDistance = top->dis + edges[make_pair(top, *ni)];
+			if(newDistance < *ni->dis) {
+				DijkNode* newNode = new DijkNode(*ni); // make of copy of this node
+				newNode->dis = newDistance;
+				pq.push(newNode);
+			}
+		}
+	}
+	return shortest[dest]; 
+}
+
+
+// DFS check graph has cycle
+set<node*> visited;
+bool DFS(node *n, node* prev) {
+	if(visited.find(n))
+		return true;
+	else
+		visited.insert(n);
+	for(int i=0; i<n->neighbour.size(); i++) {
+		if(n->neighbour[i] != prev) {
+			bool res = DFS(n->neighbour[i], n);
+			if(res)
+				return true;
+		}
+	}
+	return false;
+}
+
+bool wrapper(node *n) {
+	return DFS(n, NULL);
+}
+
+
+// given a double between 0 - 1, print the binary representation
+void foo(double d) {
+	for(int i=0; i<10; i++) {
+		d=2.0*d;
+		if(d>=1) {
+			cout<<"1"; d=d-1;
+		} else {
+			cout<<"0";
+		}
+	}
+	cout<<endl;
+}
+
+
+// merge sort
+void mergeSort(int arr[], int low, int high) {
+	if(low>=high)
+		return;
+	int mid = low + ((high - low) >> 1);
+	mergeSort(arr, low, mid);
+	mergeSort(arr, mid+1, high);
+	// merging
+	int temp[high-low+1];
+	int i=0, lowPtr=low, highPtr=mid+1;
+	while(lowPtr <= mid && highPtr <= high) {
+		if(arr[lowPtr] <= arr[highPtr]) {
+			temp[i++]=arr[lowPtr++];
+		} else {
+			temp[i++]=arr[highPtr++];
+		}
+	}
+	while(lowPtr <= mid)
+		temp[i++]=arr[lowPtr++];
+	while(highPtr <= high)
+		temp[i++]=arr[highPtr++];
+	for(i=0; i<high-low+1; i++)
+		arr[low+i] = temp[i];
+}
+
+int main() {
+	int arr[] = {3,2,1,2,1,5,3,-9,7,0,-1,-2};
+	mergeSort(arr, 0, 11);
+	for(int i=0; i<12; i++)
+		cout<<arr[i]<<" ";
+	return 0;
+}
+			
+// quick sort			
+void QSort(int arr[], int low, int high) {
+	if(low>=high)
+		return;
+	int pivot=arr[low];
+	int s=low+1, e=high;
+	while(s <= e) {
+		if(arr[s] <= pivot) {
+			s++;
+		} else {
+			swap(arr[s], arr[e--]);
+		}
+	}
+	swap(arr[low], arr[e]);
+	QSort(arr, low, e-1);
+	QSort(arr, e+1, high);
+}
+	
+// quick select
+int QSelect(int arr[], int low, int high, int k) {	
+	if(low>=high)
+		return arr[low];
+	int pivot=arr[low];
+	int s=low+1, e=high;
+	while(s <= e) {
+		if(arr[s] <= pivot) {
+			s++;
+		} else {
+			swap(arr[s], arr[e--]);
+		}
+	}
+	swap(arr[low], arr[e]);
+	if(k == e-low+1)
+		return arr[e];
+	else if(k < e-low+1)
+		return QSelect(arr, low, e-1, k);
+	else
+		return QSelect(arr, e+1, high, k-(e-low+1));
+}
+	
+// avl tree
+class node{
+	public:
+	int val;
+	int height;
+	node* left;
+	node* right;
+	node(int v):val(v), left(NULL), right(NULL), height(1) {
+		
+	};
+};
+class AVL{
+	public:
+	node* root;
+	AVL() : root(NULL) {};
+int getH(node *n) {
+	return n ? n->height : 0;
+}
+node* rotateLeft(node* n) {
+	cout<<"rotate left "<<n->val<<endl;
+	node* rightChild=n->right;
+	n->right=rightChild->left;
+	rightChild->left=n;
+	n->height=max(getH(n->left), getH(n->right)) + 1;
+	rightChild->height=max(getH(rightChild->left), getH(rightChild->right)) + 1;
+	return rightChild;
+}
+node* rotateRight(node* n) {
+	cout<<"rotate right "<<n->val<<endl;
+	node* leftChild=n->left;
+	n->left=leftChild->right;
+	leftChild->right=n;
+	n->height=max(getH(n->left), getH(n->right)) + 1;
+	leftChild->height=1 + max(getH(leftChild->left), getH(leftChild->right));
+	return leftChild;
+}
+int balance(node *n) {
+	int t = getH(n->left) - getH(n->right);
+	return t;
+}
+node* insert(node* n, int x) {
+	if(!n) {
+		cout<<"insert node "<<x<<endl;
+		return new node(x);
+	}
+	if(n->val >= x)
+		n->left = insert(n->left, x);
+	else
+		n->right = insert(n->right, x);
+	n->height = 1 + max(getH(n->left), getH(n->right));
+	int t = balance(n);
+	if(t<=1 && t>=-1)
+		return n;
+	else if(t < -1 && x > n->right->val) { // right-right
+		return rotateLeft(n);
+	} else if(t > 1 && x <= n->left->val) {
+		return rotateRight(n);
+	} else if(t < -1) {
+		n->right = rotateRight(n->right);
+		return rotateLeft(n);
+	} else if( t > 1) {
+		n->left = rotateLeft(n->left);
+		return rotateRight(n);
+	}
+}
+void insertWrapper(int x) {
+	cout<<"root="<<root<<endl;
+	root = insert(root, x);
+}
+};
+int main() {
+	AVL avl;
+	avl.insertWrapper(1);
+	avl.insertWrapper(2);
+	avl.insertWrapper(1);
+	avl.insertWrapper(2);
+	avl.insertWrapper(4);
+	avl.insertWrapper(-3);
+	avl.insertWrapper(6);
+	avl.insertWrapper(5);
+	avl.insertWrapper(7);
+	avl.insertWrapper(8);
+	return 0;
+}
+	
+
+// generate 1 0 string
+void gen(string in) {
+	vector<string> res;
+	stack<string> stk;
+	if(in[0]=='1')
+		stk.push("1");
+	else if(in[0]=='0');
+		stk.push("0");
+	else {
+		stk.push("1"); stk.push("0");
+	}
+	while(!stk.empty()) {
+		string one=stk.top(); stk.pop();
+		int idx=one.length();
+		if(idx == in.length()) {
+			res.push_back(one);
+			cout<<one<<endl;
+		} else if(in[0]=='1') {
+			one+='1';
+			stk.push(one);
+		} else if(in[0]=='0') {
+			one+='0';
+			stk.push(one);
+		} else {
+			stk.push(one+'0'); stk.push(one+'1');
+		}
+	}
+}
+	
+			
+			
+
