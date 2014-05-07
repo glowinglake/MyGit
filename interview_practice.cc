@@ -5050,6 +5050,3618 @@ void gen(string in) {
 	}
 }
 	
+	
+enum cardName {Kill, Miss, Peach, Wine};
+enum cardType {Basic, Trick, Suite};
+enum cardSuite {Heart, Diamond, Spade, Club};
+enum General {guanyu, zhangfei, liubei};
+enum Identity {Host, Anti, Evil, Loyal};
+class Card{
+	int value;	
+	cardType type;
+	cardName name;
+};
+class Deck{
+	shuffle(List);
+	distribute();
+	int totalPlayer;
+	List<Card> cards;
+	List<Card> discarded;
+};
+class Wear{
+	Card* weapon;
+	Card* armor;
+	Card* offenseHorse;
+	Card* defenseHorse;
+};
+
+class Player{
+	String name;
+	General general;
+	Identity identity;
+	int tableID;
+	Wear wear;
+	// reset the hasKilled var, etc. 
+	Prelude();
+	bool hasKilled;
+	getCard(Deck);
+	// could be multiple cards, with multiple players
+	action(List<Card> cardSet, List<Player> playerSet);
+	discardCard();
+	List<Card> checkRegion;
+	List<Card> inHand;
+	
+	enum Status {flip, passive, prelude, check, ppickCards, act, finish};
+	Status status;
+	int HPRange;
+	int HP;
+}
+
+
+//balanced binary tree
+/**
+ * Definition for binary tree
+ * struct TreeNode {
+ *     int val;
+ *     TreeNode *left;
+ *     TreeNode *right;
+ *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}
+ * };
+ */
+class Solution {
+public:
+    int height(TreeNode *node, bool &isFlat, bool &isBalanced){
+		if(!node){
+			isFlat=true;
+			isBalanced=true;
+			return 0;
+		}
+		bool leftFlat, rightFlat, leftBalanced, rightBalanced;
+		int leftH=height(node->left, leftFlat, leftBalanced);
+		int rightH=height(node->right, rightFlat, rightBalanced);
+		if(!leftBalanced || !rightBalanced){
+			isBalanced=false;
+			return -1;
+		}
+		//balanced children
+		if(leftH==rightH){
+			if(leftFlat && rightFlat){
+				isFlat=true;
+				isBalanced=true;
+				return leftH+1;
+			}
+			else{
+				isFlat=false;
+				isBalanced=true;
+				return leftH+1;
+			}
+		}
+		else if(leftH==rightH+1){
+
+				isFlat=false;
+				isBalanced=true;
+				return leftH+1;
 			
+		}
+		else if(rightH==leftH+1){
+		
+				isFlat=false;
+				isBalanced=true;
+				return rightH+1;
 			
+		}
+		else{
+			isBalanced=false;
+			return -1;
+		}
+	}
+	bool isBalanced(TreeNode *root) {
+        // Start typing your C/C++ solution below
+        // DO NOT write int main() function
+        bool balanced, flat;
+		int h;
+		h=height(root, flat, balanced);
+		return balanced;
+	
+    }
+};
+
+
+//length of last word
+class Solution {
+public:
+    bool isWord(const char *s){
+		return (*s != ' ');
+		}
+    int lengthOfLastWord(const char *s) {
+        // Start typing your C/C++ solution below
+        // DO NOT write int main() function
+        bool inWord=false;
+		const char * t=s;
+		if(!t)
+			return 0;
+		int len=0;
+		int lastLen=0;
+		while(*t != '\0'){
+			if(isWord(t)){
+				inWord=true;
+				len++;
+				lastLen=len;
+			}
+			else{
+				inWord=false;
+				len=0;
+			}
+		t++;
+		}
+		return lastLen;
+    }
+};
+
+
+
+//minimun path sum
+class Solution {
+public:
+    int minPathSum(vector<vector<int> > &grid) {
+        // Start typing your C/C++ solution below
+        // DO NOT write int main() function
+        int width=grid.size();
+		int height=grid[0].size();
+		int *resArr=new int[width];
+		resArr[0]=grid[0][0];
+		for(int i=1;i<width;i++)
+			resArr[i]=resArr[i-1]+grid[i][0];
+		for(int j=1;j<height;j++){
+			resArr[0]=resArr[0]+grid[0][j];
+			for(int k=1;k<width;k++){
+				resArr[k]=grid[k][j]+((resArr[k-1]<resArr[k]) ? resArr[k-1]:resArr[k]);
+			}
+		}
+		return resArr[width-1];
+    }
+};
+
+
+// stock  1
+class Solution {
+public:
+    int maxProfit(vector<int> &prices) {
+        // Start typing your C/C++ solution below
+        // DO NOT write int main() function
+		int len = prices.size();
+		if(len<2)
+			return 0;
+		int curMax=0;
+		int cur, prev=prices[len-1];
+		// search backward for a increasing set of prices
+		for(int i=len-2;i>=0;i--){
+			cur=prices[i];
+			if(cur<=prev){
+				curMax = curMax>(prev-cur) ? curMax:(prev-cur);
+			}else{
+				prev=cur;
+			}
+		}
+		return curMax;
+    }
+};
+
+// stock 2
+// greedy
+class Solution {
+public:
+    int maxProfit(vector<int> &prices) {
+        // Start typing your C/C++ solution below
+        // DO NOT write int main() function
+        int len=prices.size();
+		bool hold=false;
+		int profit=0;
+		int a;
+		for(int i=0;i<len-1;i++){
+			if(!hold){
+				if(prices[i+1]>prices[i]){
+					a=prices[i];
+					hold=true;
+				}
+				else
+					continue;
+			}
+			else{
+				if(prices[i+1]>prices[i])
+					continue;
+				else{
+					profit+=prices[i]-a;
+					hold=false;
+				}
+			}
+		}
+		if(hold)
+			profit+=prices[len-1]-a;
+		return profit;
+    }
+};
+
+// stock 3
+class Solution {
+public:
+    int maxProfit(vector<int> &prices) {
+		int len = prices.size();
+		if(len<2)
+			return 0;
+		int curMax=0;
+		int backMax[len];
+		backMax[len-1]=0;
+		int cur, prev=prices[len-1];
+		// search backward for a increasing set of prices
+		for(int i=len-2;i>=0;i--){
+			cur=prices[j];
+			if(cur<=prev){
+				curMax = max(curMax, prev-cur); // curMax>(prev-cur) ? curMax:(prev-cur);
+				backMax[i]=curMax;
+			}else{
+				prev=cur;
+				backMax[i]=backMax[i+1];
+			}
+		}
+		// search forward
+		int forwardMax[len];
+		forwardMax[0]=0;
+		int ma=prices[0], mi=prices[0];
+		for(int j=1; j<len; j++) {
+			cur=prices[i];
+			if(cur<mi){
+				mi=cur;
+				ma=cur;
+				forwardMax[j]=forwardMax[j-1];
+			} else if(cur>ma) {
+				ma=cur;
+				int profit=ma-mi;
+				forwardMax[j]=max(forwardMax[j-1], profit);
+			} else
+				forwardMax[j]=forwardMax[j-1];
+		}
+		int sum=0;
+		for(int i=1;i<len-2;i++)
+			sum=max(sum, forwardMax[i]+backMax[i+1]);
+		sum=max(sum, backMax[0]);
+		return sum;
+    }
+};
+
+// bt -> linked list
+/**
+ * Definition for binary tree
+ * struct TreeNode {
+ *     int val;
+ *     TreeNode *left;
+ *     TreeNode *right;
+ *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}
+ * };
+ */
+class Solution {
+public:
+    TreeNode *flat(TreeNode *n){
+		TreeNode *temp=n->right;
+		TreeNode *original=n;
+		if(n->left)
+			n->right=flat(n->left);
+		else
+			n->right=NULL;
+		n->left=NULL;
+		if(!temp){
+			return original;
+		} else {
+			while(n->right){
+				n=n->right;
+			}
+			n->right=flat(temp);
+			return original;
+		}
+	}
+		
+    void flatten(TreeNode *root) {
+        // Start typing your C/C++ solution below
+        // DO NOT write int main() function
+		if(root)
+			flat(root);
+    }
+};
+
+// n queen 
+class Solution {
+public:
+    vector<vector<string> > res;
+	void NQueens(int n, int N, vector<vector<int> > arr){
+		for(int i=0;i<N;i++){
+			if(arr[n][i] != 0)
+				continue;
+			else{
+				vector<vector<int> > newArr;
+				copyArr(arr,newArr,N);
+				colorArr(newArr, n, i, N);
+				if(n<N-1)
+					NQueens(n+1, N, newArr);
+				else
+					addConfig(newArr, N);
+				}
+			}
+		}
+	void copyArr(vector<vector<int> > arr, vector<vector<int> > newArr, int N){
+		for(int i=0;i<N;i++){
+			vector<int> row;
+			newArr.push_back(row);
+				for(int j=0;j<N;j++)
+					newArr[i].push_back(arr[i][j]);
+			}
+		}
+	void colorArr(vector<vector<int> > arr, int n, int i, int N){
+		arr[n][i]=2;
+		for(int x=0;x<N;x++)
+			if(arr[n][x]!=2)
+				arr[n][x]=1;
+		for(int x=0;x<N;x++)
+			if(arr[x][i]!=2)
+				arr[x][i]=1;
+		// diag
+		for(int x=n,  y=i;x<N,y<N;x++,y++)
+			if(arr[x][y]!=2)
+				arr[x][y]=1;
+		for(int x=n,  y=i;x>=0,y<N;x--,y++)
+			if(arr[x][y]!=2)
+				arr[x][y]=1;
+		for(int x=n,  y=i;x>=0,y>=0;x--,y--)
+			if(arr[x][y]!=2)
+				arr[x][y]=1;
+		for(int x=n,  y=i;x<N,y>=0;x++,y--)
+			if(arr[x][y]!=2)
+				arr[x][y]=1;
+		}
+	void addConfig(vector<vector<int> > arr, int N){
+		vector<string> v;
+		for(int i=0;i<N;i++){
+			string s;
+			for(int j=0;j<N;j++){
+				//char c=(arr[i][j]==2) ? 'Q':'.';
+				s.append(1, (arr[i][j]==2) ? 'Q':'.');
+				}
+			v.push_back(s);
+			}
+		res.push_back(v);
+	}
+    vector<vector<string> > solveNQueens(int n) {
+        // Start typing your C/C++ solution below
+        // DO NOT write int main() function
+        vector<vector<int> > arr;
+		for(int i=0;i<n;i++){
+			vector<int> row;
+			arr.push_back(row);
+			for(int j=0;j<n;j++)
+				arr[i].push_back(0);
+			}
+		NQueens(0,n,arr);
+		return res;
+    }
+};
+
+// partition list
+/**
+ * Definition for singly-linked list
+ * struct ListNode {
+ *     int val;
+ *     ListNode *next;
+ *     ListNode(int x) : val(x), next(NULL) {}
+ * };
+ */
+class Solution {
+public:
+    ListNode *partition(ListNode *head, int x) {
+        // Start typing your C/C++ solution below
+        // DO NOT write int main() function
+        ListNode* lastSmall=NULL;
+		ListNode* firstBig=NULL;
+		ListNode* lastBig=NULL;
+		if(head==NULL)
+			return NULL;
+		ListNode* t=head;
+		ListNode* firstSmall=NULL;
+		while(t){
+			ListNode* temp=t->next;
+			if(t->val < x){
+				if(!lastSmall){
+					firstSmall=t;
+					lastSmall=t;
+					lastSmall->next=firstBig;
+				} else {
+					lastSmall->next=t;
+					t->next=firstBig;
+					lastSmall=t;
+				}
+			} else {
+				if(!firstBig){
+					firstBig=t;
+					lastBig=t;
+					firstBig->next=NULL;
+					if(lastSmall)
+						lastSmall->next=firstBig;
+				} else {
+					lastBig->next=t;
+					lastBig=t;
+					lastBig->next=NULL;
+				}
+			}
+			t=temp;
+		}
+		if(firstSmall)
+			return firstSmall;
+		else if(firstBig)
+			return firstBig;
+    }
+};
+
+
+
+// pascal's triangle II
+class Solution {
+public:
+    vector<int> getRow(int rowIndex) {
+        // Start typing your C/C++ solution below
+        // DO NOT write int main() function
+        vector<int> res;
+		res.push_back(1);
+		for(int i=0;i<rowIndex;i++){
+			res.push_back(1);
+			for(int j=i;j>0;j--){
+				res[j]=res[j-1]+res[j];
+			}
+		}
+		return res;
+    }
+};
+
+//triangle 
+class Solution {
+public:
+	int min(int a,int b){
+		return (a<b) ? a:b;
+	}
+    int minimumTotal(vector<vector<int> > &triangle) {
+        // Start typing your C/C++ solution below
+        // DO NOT write int main() function
+        vector<vector<int> > res=triangle;
+        int level=triangle.size();
+		for(int i=1;i<level;i++){
+			int len=triangle[i].size();
+			res[i][0]=res[i-1][0]+res[i][0];
+			res[i][len-1]=res[i][len-1]+res[i-1][len-2];
+			for(int j=1;j<len-1;j++)
+				res[i][j]=res[i][j]+min(res[i-1][j-1], res[i-1][j]);
+			}
+		int minPath=res[level-1][0];
+		for(int i=1;i<res[level-1].size();i++)
+			minPath=min(minPath,res[level-1][i]);
+		return minPath;
+    }
+};
+
+//is BST
+class Solution {
+public:
+    int getBiggestNodeVal(TreeNode *n){
+		while(n->right){
+			n=n->right;
+		}
+		return n->val;
+	}
+	int getSmallestNodeVal(TreeNode *n){
+		while(n->left){
+			n=n->left;
+		}
+		return n->val;
+	}
+	bool compare(TreeNode *n){
+		if(!n->left && !n->right)
+			return true;
+		if(!n->left && n->right)
+			return n->val < getSmallestNodeVal(n->right);
+		if(n->left && !n->right)
+			return n->val > getBiggestNodeVal(n->left);
+		if(n->left && n->right)
+			return (n->val < getSmallestNodeVal(n->right)) && (n->val > getBiggestNodeVal(n->left));
+	}
+	bool isValidBST(TreeNode *root) {
+        // Start typing your C/C++ solution below
+        // DO NOT write int main() function
+        if(!root)
+			return true;
+		if(!compare(root))
+			return false;
+		return isValidBST(root->left) && isValidBST(root->right);
+    }
+};
+
+// binary tree maximum path
+/**
+ * Definition for binary tree
+ * struct TreeNode {
+ *     int val;
+ *     TreeNode *left;
+ *     TreeNode *right;
+ *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}
+ * };
+ */
+class Solution {
+public:
+	int max(int a, int b){
+		return (a>b) ? a:b;
+	}
+	int globalMax;
+    int maxSinglePath(TreeNode *n){
+		// n is not NULL
+		if(!n->left && !n->right){
+			return n->val;
+		}else if(n->left && !n->right){
+			return max(n->val, n->val + maxSinglePath(n->left));
+		} else if (!n->left && n->right){
+			return max(n->val, n->val + maxSinglePath(n->right));
+		} else {
+			return max(n->val, n->val + max(maxSinglePath(n->left), maxSinglePath(n->right)));
+		}
+	}
+	int maxPathSum(TreeNode *root) {
+        // Start typing your C/C++ solution below
+        // DO NOT write int main() function
+        int thisAsMid=root->val;
+		if(!root->left && !root->right){
+			return root->val;
+		} else if(!root->left && root->right){
+			return max(max(root->val, root->val+maxSinglePath(root->right)), maxPathSum(root->right));
+		} else if(root->left && !root->right){
+			return max(max(root->val, root->val+maxSinglePath(root->left)), maxPathSum(root->left));
+		} else{
+			int leftS=maxSinglePath(root->left);
+			int rightS=maxSinglePath(root->right);
+			int maxCur=root->val;
+			if(leftS>0)
+				maxCur+=leftS;
+			if(rightS>0)
+				maxCur+=rightS;
+			int leftM=maxPathSum(root->left);
+			int rightM=maxPathSum(root->right);
+			return max(max(leftM,rightM), maxCur);
+		}
+    }
+};
+
+class Solution {
+public:
+	int max(int a, int b){
+		return (a>b) ? a:b;
+	}
+	int globalMax;
+    void updateGlobalMax(int a){
+		globalMax = max(globalMax, a);
+	}
+	int maxSinglePath(TreeNode *n){
+		// n is not NULL
+		if(!n->left && !n->right){
+			updateGlobalMax(n->val);
+			return n->val;
+		}else if(n->left && !n->right){
+			int curMax=max(n->val, n->val + maxSinglePath(n->left));
+			updateGlobalMax(curMax);
+			return curMax;
+		} else if (!n->left && n->right){
+			int curMax=max(n->val, n->val + maxSinglePath(n->right));
+			updateGlobalMax(curMax);
+			return curMax;
+		} else {
+			int leftMax=maxSinglePath(n->left);
+			int rightMax=maxSinglePath(n->right);
+			int curMax=max(n->val, n->val + max(leftMax, rightMax));
+			int updateVal=n->val+max(leftMax, 0)+max(rightMax, 0);
+			updateGlobalMax(updateVal);
+			return curMax;
+		}
+	}
+	int maxPathSum(TreeNode *root) {
+       globalMax=-99999;
+	   maxSinglePath(root);
+	   return globalMax;
+	  }
+};
+
+
+//  binary tree zigzag traversal
+/**
+ * Definition for binary tree
+ * struct TreeNode {
+ *     int val;
+ *     TreeNode *left;
+ *     TreeNode *right;
+ *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}
+ * };
+ */
+class Solution {
+public:
+    vector<vector<int> > zigzagLevelOrder(TreeNode *root) {
+        // Start typing your C/C++ solution below
+        // DO NOT write int main() function
+        vector<vector<int> > res;
+		stack<TreeNode *> even, odd;
+		bool oddTurn=true;
+		if(!root)
+			return NULL;
+		odd.push(root);
+		while(1){
+			if(oddTurn){
+				if(odd.empty()){
+					break;
+				} else {
+					vector<int> level;
+					while(!odd.empty()){
+						TreeNode* n=odd.top();
+						odd.pop();
+
+						level.push_back(n->val);
+						if(n->left)
+							even.push(n->left);
+						if(n->right)
+							even.push(n->right);
+						}
+					res.push_back(level);
+					oddTurn=false;
+				}
+			} else {
+				if(even.empty())
+					break;
+				else {
+					vector<int> level;
+					while(!even.empty()){
+						TreeNode* n=even.top();
+						even.pop();
+						level.push_back(n->val);
+						if(n->right)
+							odd.push(n->right);
+						if(n->left)
+							odd.push(n->left);
+						
+						}
+					res.push_back(level);
+					oddTurn=true;
+				}
+			}
+		}
+		return res;
+    }
+};
+
+//interleave string
+class Solution {
+public:
+    bool isInterleave(string s1, string s2, string s3) {
+        // Start typing your C/C++ solution below
+        // DO NOT write int main() function    
+		if(s1.length()+s2.length() != s3.length())
+			return false;
+		if(s1.length()==0 && s2.length()==0 && s3.length()==0)
+			return true;
+		bool match1=false, match2=false;
+		if(!s1.empty() && s1[0]==s3[0]){
+			string s1new=s1, s3new=s3;
+			s1new.erase(0,1);
+			s3new.erase(0,1);
+			match1=isInterleave(s1new,s2,s3new);
+		}
+		if(!s2.empty() && s2[0]==s3[0]){
+			string s2new=s2, s3new2=s3;
+			s2new.erase(0,1);
+			s3new2.erase(0,1);
+			match2=isInterleave(s1,s2new,s3new2);
+		}
+		return match1 || match2;
+    }
+};
+
+//solution 2 dp
+class Solution {
+public:
+	// F(m+1,n+1)=F(m,n+1)&(s3[n+1]==s2[n+1] + F(m+1,n)&(==)
+    bool isInterleave(string s1, string s2, string s3) {
+		if(s1.length()==0)
+			return s2==s3;
+		if(s2.length()==0)
+			return s1==s3;
+		if(s1.length()+s2.length() != s3.length())
+			return false;
+		bool canInterleave[s1.length()+1][s2.length()+1];
+		canInterleave[0][0]=true;
+		for(int i=1;i<s1.length()+1;i++)
+			canInterleave[i][0]=canInterleave[i-1][0]&&(s1[i-1]==s3[i-1]);
+		for(int i=1;i<s2.length()+1;i++)
+			canInterleave[0][i]=canInterleave[0][i-1]&&(s2[i-1]==s3[i-1]);
+		for(int i=1;i<s1.length()+1;i++){
+			int x=i, y=1;
+			while(x>0 && y<s2.length()+1){
+				canInterleave[x][y]=(canInterleave[x-1][y] && (s1[x-1]==s3[x+y-1])) || (canInterleave[x][y-1] && (s2[y-1]==s3[x+y-1]));
+				x--;
+				y++;
+			}
+		}
+		for(int i=2;i<s2.length()+1;i++){
+			int y=i, x=s1.length();
+			while(x>0 && y<s2.length()+1){
+				canInterleave[x][y]=(canInterleave[x-1][y] && (s1[x-1]==s3[x+y-1])) || (canInterleave[x][y-1] && (s2[y-1]==s3[x+y-1]));
+				x--;
+				y++;
+			}
+		}
+		return canInterleave[s1.length()][s2.length()];
+    }
+};
+
+//longest common prefix
+class Solution {
+public:
+    string longestCommonPrefix(vector<string> &strs) {
+        // Start typing your C/C++ solution below
+        // DO NOT write int main() function
+        int len=strs.size();
+
+        string res;
+        if(len==1)
+            return strs[0];
+        if(len==0)
+            return res;
+        char c;
+        int t=0, shortestStr=strs[0].size();
+        for(int i=1;i<len;i++){
+            if(strs[i].size()<shortestStr)
+                shortestStr=strs[i].size();
+        }
+        bool end=false;
+        while(t<shortestStr){
+        for(int i=0;i<len;i++){
+            if(i==0)
+                c=strs[i][t];
+            else if(strs[i][t] != c){
+                end=true;
+                break;
+            }
+        }
+        if(end)
+            break;
+        else{
+            res.append(1,c);
+            t++;
+        }
+        }
+        return res;
+    }
+};
+
+// populate next right pointer and II
+class Solution {
+public:
+    void connect(TreeLinkNode *root) {
+        // Start typing your C/C++ solution below
+        // DO NOT write int main() function
+        queue<TreeLinkNode *> q;
+		if(!root)
+			return;
+		q.push(root);
+		q.push(NULL);
+		TreeLinkNode* prev=NULL;
+		while(!q.empty()){
+			TreeLinkNode* node=q.front();
+			q.pop();
+			if(!node){
+				if(q.empty())
+					break;
+				q.push(NULL);
+				prev=NULL;
+				continue;
+			}
+			if(node->left)
+				q.push(node->left);
+			if(node->right)
+				q.push(node->right);
+			if(prev)
+				prev->next=node;
+			node->next=NULL;
+			prev=node;
+		}
+    }
+};
+// constant space solution 
+class Solution {
+public:
+    void connect(TreeLinkNode *root) {
+        // Start typing your C/C++ solution below
+        // DO NOT write int main() function
+		if(!root)
+			return;
+		TreeLinkNode* begin=NULL, prev=NULL, cur=root;
+		bool processLeft=false; // processed cur's left child?
+		while(1){
+			if(!begin){
+				while(cur){
+					if(cur->left){
+						begin=cur->left;
+						prev=begin;
+						processLeft=true;
+						break;
+					}else if(cur->right){
+						begin=cur->right;
+						cur=cur->next;
+						prev=begin;
+						processLeft=false;
+						break;
+					}
+					cur=cur->next;
+				}
+				if(!begin)
+					//end of loop
+					break;
+			}else{
+				while(cur){
+					if(processLeft){//process right only
+						if(cur->right){
+							prev->next=cur->right;
+							prev=cur->right;
+						}
+						processLeft=false;
+						cur=cur->next;
+					} else {//process left if any
+						if(cur->left){
+							prev->next=cur->left;
+							prev=cur->left;
+							processLeft=true;
+						}else{//no left
+							processLeft=true;
+						}
+					}
+				}
+				// end of a level
+				cur=begin;
+				begin=NULL; prev=NULL;
+			}
+		}
+	}
+};
+
+//  exchange wrong elements in bst
+/* Definition for binary tree
+ * struct TreeNode {
+ *     int val;
+ *     TreeNode *left;
+ *     TreeNode *right;
+ *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}
+ * };
+ */
+class Solution {
+public:
+	TreeNode* arr[2];
+	TreeNode* wrongNode[2];
+	void check(TreeNode* n){
+		if(arr[1] != NULL){
+			arr[0]=arr[1];
+			arr[1]=n;
+			//arr[2]=n;
+			if(arr[0]->val > arr[1]->val)
+				if(wrongNode[0])
+					wrongNode[1]=arr[1];
+				else{
+					wrongNode[0]=arr[0];
+					wrongNode[1]=arr[1];
+				}
+		}else
+			arr[1]=n;
+	}	
+	void traverse(TreeNode* n){
+		if(!n)
+			return;
+		traverse(n->left);
+		check(n);
+		traverse(n->right);
+	}
+    void recoverTree(TreeNode *root) {
+        // Start typing your C/C++ solution below
+        // DO NOT write int main() function
+        arr[0]=NULL;
+		arr[1]=NULL;
+		wrongNode[0]=NULL;
+		wrongNode[1]=NULL;
+		//arr[2]=NULL;
+		traverse(root);
+		if(!wrongNode[0] || !wrongNode[1])
+			return;
+		int temp=wrongNode[0]->val;
+		wrongNode[0]->val=wrongNode[1]->val;
+		wrongNode[1]->val=temp;
+    }
+};
+
+// restore ip address
+class Solution {
+public:
+	vector<string> result;
+	bool isValid(string s, int a, int b){
+		int len=s.length();
+		if(a<0 || a>=len)
+			return false;
+		if(b<0 || b>=len)
+			return false;
+		if(a>b)
+			return false;
+		if(s[a]=='0' && a!=b)
+			return false;
+		int num=0;
+		for(int i=a;i<=b;i++)
+			num=num*10+(s[i]-'0');
+		if(num>=0 && num<256)
+			return true;
+		else
+			return false;
+	}
+    void restore(string s, int seg, string addr){
+		if(s.length()<seg || s.length()>seg*3)
+			return;
+		if(seg==1){
+			if(isValid(s,0,s.length()-1)){
+				addr.append(".");
+				addr.append(s);
+				if(addr[0]=='.')
+					addr.erase(0,1);
+				result.push_back(addr);
+			}
+			}else{
+			for(int len=1;len<4;len++){
+				if(isValid(s,0,len-1)){
+					string newAddr=addr;
+					newAddr.append(".");
+					newAddr.append(s,0,len);
+					string newS=s;
+					newS.erase(0,len);
+					restore(newS, seg-1, newAddr);
+				}
+			}
+		}
+		}
+	vector<string> restoreIpAddresses(string s) {
+        // Start typing your C/C++ solution below
+        // DO NOT write int main() function
+		string addr;
+		result.clear();
+		restore(s, 4, addr);
+		return result;
+    }
+};
+
+
+//  two sum
+class Solution {
+public:
+    vector<int> twoSum(vector<int> &numbers, int target) {
+        // Start typing your C/C++ solution below
+        // DO NOT write int main() function
+        int len=numbers.size();
+		vector<int> oldNumbers=numbers;
+		vector<int> res;
+		for(int i=0;i<len;i++){
+			int min=numbers[i];
+			for(int j=i;j<len;j++)
+				if(numbers[j]<min){
+					numbers[i]=numbers[j];
+					numbers[j]=min;
+					min=numbers[i];
+				}
+		}
+		int a=0,aa,bb;
+		int b=len-1;
+		while(a<b){
+			if(numbers[a]+numbers[b]<target){
+				a++;
+			}
+			else if(numbers[a]+numbers[b]>target)
+				b--;
+			else
+				break;
+		}
+		for(int i=0;i<len;i++){
+			if(oldNumbers[i]==numbers[a])
+				aa=i;
+			if(oldNumbers[i]==numbers[b])
+				bb=i;
+			}
+		int t;
+		if(aa>bb){
+			t=aa;
+			aa=bb;
+			bb=t;
+		}
+		aa++;bb++;
+		res.push_back(aa);
+		res.push_back(bb);
+		return res;
+	}
+};
+
+//unique binary tree I
+class Solution {
+public:
+    int numTrees(int n) {
+        // Start typing your C/C++ solution below
+        // DO NOT write int main() function
+        int res=0;
+        if(n==0)
+            return 1;
+        if(n==1)
+            return 1;
+        if(n==2)
+            return 2;
+        for(int i=0;i<n;i++){
+            res+=numTrees(i)*numTrees(n-i-1);
+        }
+        return res;
+    }
+};
+
+//unique binary tree II
+class Solution {
+public:
+	vector<TreeNode* > generate(int a, int b){
+		//start at a, end at b (non inclusive)
+		vector<TreeNode* > res;
+		if(a==b-1){
+			TreeNode* node=new TreeNode(a);
+			res.push_back(node);
+			return res;
+		} else if(a>=b){
+			// empty node;
+			TreeNode* node=NULL;
+			res.push_back(node);
+			return res;
+		} else {
+			for(int i=a;i<b;i++){
+				vector<TreeNode* > leftSubs=generate(a,i);
+				vector<TreeNode* > rightSubs=generate(i+1, b);
+				for(int p=0;p<leftSubs.size();p++){
+					for(int q=0;q<rightSubs.size();q++){
+						TreeNode* node=new TreeNode(i);
+						node->left=leftSubs[p];
+						node->right=rightSubs[q];
+						res.push_back(node);
+					}
+				}
+			}
+			return res;
+		}
+	}
+    vector<TreeNode *> generateTrees(int n) {
+        // Start typing your C/C++ solution below
+        // DO NOT write int main() function
+        return generate(1, n+1);
+    }
+};
+
+// sudoku solver
+class Solution {
+public:
+    void clearReg(bool reg[9]){
+		for(int i=0;i<9;i++)
+			reg[i]=false;
+		}
+	int isNum(char c){
+		if(c>='1' && c<='9')
+			return (c-'0');
+		else
+			return 0;
+	}
+	bool registered[9];
+	bool isValid(vector<vector<char> > &board, int x, int y){
+		clearReg(registered);
+		for(int i=0;i<9;i++){
+			if(!isNum(board[x][i]))
+				continue;
+			else if(registered[isNum(board[x][i])-1] == false)
+				registered[isNum(board[x][i])-1] = true;
+			else
+				return false;
+		}
+		clearReg(registered);
+		for(int i=0;i<9;i++){
+			if(!isNum(board[i][y]))
+				continue;
+			else if(registered[isNum(board[i][y])-1] == false)
+				registered[isNum(board[i][y])-1] = true;
+			else
+				return false;
+		}
+		clearReg(registered);
+		int xS=x-x%3;
+		int yS=y-y%3;
+		for(int i=xS;i<xS+3;i++)
+			for(int j=yS;j<yS+3;j++){
+				if(!isNum(board[i][j]))
+					continue;
+				else if(registered[isNum(board[i][j])-1] == false)
+					registered[isNum(board[i][j])-1] = true;
+				else
+					return false;
+			}
+		return true;
+	}
+	vector<vector<char> > tempBoard;
+	void storeBoard(vector<vector<char> > &board){
+		tempBoard=board;
+	}
+	void solve(vector<vector<char> > &board, int x, int y){
+    	bool finalCube=false;
+
+        if(x==9 && y==0)
+			finalCube=true;
+		if(finalCube){
+			storeBoard(board);
+			return;
+		}
+		int xNext,yNext;
+		if(y==8){
+			xNext=x+1; yNext=0;
+		}else{
+			xNext=x; yNext=y+1;
+		}
+		
+		if(board[x][y] != '.')
+			solve(board, xNext, yNext);
+		else{
+			for(int i=1;i<=9;i++){
+				board[x][y]='0'+i;
+				if(isValid(board, x, y))
+					solve(board, xNext, yNext);
+			}
+			// revert the current cube
+			board[x][y]='.';
+		}
+	}
+    void solveSudoku(vector<vector<char> > &board) {
+        // Start typing your C/C++ solution below
+        // DO NOT write int main() function
+        solve(board, 0, 0);
+		for(int i=0;i<9;i++)
+			for(int j=0;j<9;j++)
+				board[i][j]=tempBoard[i][j];
+    }
+};
+
+// valid sudokuclass Solution 
+class Solution {
+public:
+    void clearReg(bool reg[9]){
+    	for(int i=0;i<9;i++)
+			reg[i]=false;
+		}
+	int isNum(char c){
+		if(c>='1' && c<='9')
+			return (c-'0');
+		else
+			return 0;
+	}
+	bool registered[9];
+	bool validSudoku;
+	bool isValid(vector<vector<char> > &board, int x, int y){
+		clearReg(registered);
+		for(int i=0;i<9;i++){
+			if(!isNum(board[x][i]))
+				continue;
+			else if(registered[isNum(board[x][i])-1] == false)
+				registered[isNum(board[x][i])-1] = true;
+			else
+				return false;
+		}
+		clearReg(registered);
+		for(int i=0;i<9;i++){
+			if(!isNum(board[i][y]))
+				continue;
+			else if(registered[isNum(board[i][y])-1] == false)
+				registered[isNum(board[i][y])-1] = true;
+			else
+				return false;
+		}
+		clearReg(registered);
+		int xS=x-x%3;
+		int yS=y-y%3;
+		for(int i=xS;i<xS+3;i++)
+			for(int j=yS;j<yS+3;j++){
+				if(!isNum(board[i][j]))
+					continue;
+				else if(registered[isNum(board[i][j])-1] == false)
+					registered[isNum(board[i][j])-1] = true;
+				else
+					return false;
+			}
+		return true;
+	}
+	vector<vector<char> > tempBoard;
+	void storeBoard(vector<vector<char> > &board){
+		tempBoard=board;
+		validSudoku=true;
+	}
+	void solve(vector<vector<char> > &board, int x, int y){
+		if(validSudoku)
+			return;
+    	bool finalCube=false;
+
+        if(x==9 && y==0)
+			finalCube=true;
+		if(finalCube){
+			storeBoard(board);
+			return;
+		}
+		int xNext,yNext;
+		if(y==8){
+			xNext=x+1; yNext=0;
+		}else{
+			xNext=x; yNext=y+1;
+		}
+		
+		if(board[x][y] != '.')
+			solve(board, xNext, yNext);
+		else{
+			for(int i=1;i<=9;i++){
+				board[x][y]='0'+i;
+				if(isValid(board, x, y))
+					solve(board, xNext, yNext);
+			}
+			// revert the current cube
+			board[x][y]='.';
+		}
+	}
+    bool isValidSudoku(vector<vector<char> > &board) {
+        // Start typing your C/C++ solution below
+        // DO NOT write int main() function
+        validSudoku=false;
+		solve(board, 0, 0);
+		if(validSudoku)
+			return true;
+		else
+			return false;
+		for(int i=0;i<9;i++)
+			for(int j=0;j<9;j++)
+				board[i][j]=tempBoard[i][j];
+    }
+};
+
+// distinct subsequence
+// DP solution, the countSubSeq() routine is not used.
+class Solution {
+public:
+	int count;
+	void countSubSeq(string& s, int si, string& t, int ti) {
+		if(si>=s.length() || ti>=t.length())
+			return;
+		if(t.length()==ti+1){
+		// matching last char
+			for(int i=si;i<s.length();i++)
+				if(s[i]==t[ti])
+					count++;
+		}else{
+			for(int i=si;i<s.length();i++)
+				if(s[i]==t[ti])
+					countSubSeq(s, i+1, t, ti+1);
+		}
+	}
+	// subCount[t][s]=sigma(subCount[t+1][ss]) where S[ss-1]=T[t]
+    int numDistinct(string S, string T) {
+        // Start typing your C/C++ solution below
+        // DO NOT write int main() function
+        count=0;
+		int tchar=T.length();
+		int schar=S.length();
+		if(tchar==0 || schar==0)
+			return 0;
+		int subCount[tchar][schar];
+		int initCount=0;
+		for(int i=schar-1;i>=0;i--){
+			if(S[i]==T[tchar-1])
+				initCount++;
+			subCount[tchar-1][i]=initCount;
+		}
+		for(int i=0;i<tchar-1;i++)
+			subCount[i][schar-1]=0;
+		for(int i=tchar-2;i>=0;i--)
+			for(int j=schar-2;j>=0;j--){
+				if(T[i]!=S[j])
+					subCount[i][j]=subCount[i][j+1];
+				else{
+					subCount[i][j]=subCount[i][j+1]+subCount[i+1][j+1];
+				}
+			}
+		return subCount[0][0];
+		//countSubSeq(S, 0, T, 0);
+		//return count;
+    }
+};
+
+// maximal Rectangle
+class Solution {
+public:
+	int maxSpace;
+	int checkOnes(int i, int j, int c, vector<vector<char> > &matrix){
+		int row=matrix.size();
+		int col=matrix[0].size();
+		if(c>=col)
+			return 0;
+		int cOrig=c;
+		int cDest=c;
+		int width=j-1+1;
+		bool hasZero=false;
+		while(c<col && !hasZero){
+			for(int x=i;x<=j;x++)
+				if(matrix[x][c]=='0'){
+					cDest=c-1;
+					hasZero=true;
+					break;
+				}
+			c++;
+		}
+		if(!hasZero)
+			cDest=col-1;
+		return width*(cDest-cOrig+1);
+	}
+    int maximalRectangle(vector<vector<char> > &matrix) {
+		maxSpace=0;
+        // Start typing your C/C++ solution below
+        // DO NOT write int main() function
+        int row=matrix.size();
+		int col=matrix[0].size();
+		for(int c=0;c<col;c++){
+			for(int i=0;i<row;i++){
+				if(matrix[i][c]=='0')
+					continue;
+				for(int j=i;j<row;j++){
+					if(matrix[j][c]=='0')
+						break;
+					int space=checkOnes(i,j,c,matrix);
+					updateSpace(space);
+				}
+			}
+		}
+					
+    }
+};
+
+// valid palindrome
+class Solution {
+public:
+    bool nonChar(char c){
+            if(c>='0' && c<='9')
+                return false;
+            if(c>='a' && c<='z')
+                return false;
+            if(c>='A' && c<='Z')
+                return false;
+            return true;
+    }
+    bool isP(char a, char b){
+            if(a==b)
+                return true;
+            if(a==b-'A'+'a')
+                return true;
+            if(a==b-'a'+'A')
+                return true;
+            return false;
+    }
+    bool isPalindrome(string s) {
+        // Start typing your C/C++ solution below
+        // DO NOT write int main() function
+        if(s.length()==0)
+            return true;
+        int a, b=s.length()-1;
+        while(a<b){
+            if(nonChar(s[a]))
+                a++;
+            else if(nonChar(s[b]))
+                b--;
+            else if(!isP(s[a], s[b])
+                break;
+            else{
+                a++;
+                b--;
+            }
+        }
+        if(a>=b)
+            return true;
+        else
+            return false;
+    }
+};
+
+
+
+//surrounded regions
+
+class Solution {
+public:
+    int len, height;
+    void recoverOrColor(vector<vector<char>> &b, int x,int y, bool color) {
+            if(x<0 ||x> len-1 ||y<0 || y>height-1 )
+                return;
+            else if(b[x][y]=='X')
+                return;
+            else if(b[x][y]=='R') {
+                if(color)
+                    b[x][y]=='X';
+                else
+                    b[x][y]=='O';
+                recoverOrColor(b, x-1,y,color);
+                recoverOrColor(b, x+1,y,color);
+                recoverOrColor(b, x,y-1,color);
+                recoverOrColor(b, x,y+1,color);
+            }
+			else
+				return;
+    }
+    bool isRegion(vector<vector<char>> &b, int x, int y) {
+        if(b[x][y]=='X')
+            return true;
+        else if(x==0 || x==len-1 || y==0 || y==height-1)
+            return false;
+        
+        else if(b[x][y]=='O') {
+                b[x][y]='R';
+                bool left=(b[x-1][y]=='R') ? true:isRegion(b, x-1,y);
+                bool right=(b[x+1][y]=='R') ? true:isRegion(b, x+1,y);
+                bool up=(b[x][y-1]=='R') ? true:isRegion(b, x,y-1);
+                bool down=(b[x][y+1]=='R') ? true:isRegion(b, x,y+1);
+                if(left && right && up && down)
+                    return true;
+                else
+                    return false;
+        }
+		else
+			return false;
+    }
+    void solve(vector<vector<char>> &board) {
+        // Start typing your C/C++ solution below
+        // DO NOT write int main() function
+        len=board.size();//x
+        if(len==0)
+            return;
+        height=board[0].size();//y
+        if(len ==0 || height== 0)
+            return;
+        for(int i=0;i<len;i++)
+            for(int j=0;j<height;j++) {
+                if(board[i][j]=='O') {
+                    if(isRegion(board, i, j))
+                        recoverOrColor(board, i, j, true);
+                    else
+                        recoverOrColor(board, i, j, false);
+                }
+            }
+    }
+};
+
+//longest consecutive sequence
+
+class Solution {
+public:
+   set<int> m;
+    int findAndDelete(int x) {
+        if(m.find(x)==m.end())
+            return 0;
+        //found, now extend left, right
+        int t=x-1;
+        int ret=1;
+        m.erase(x);
+        while(m.find(t) != m.end()) {
+            ret++;
+            m.erase(t--);
+        }
+        t=x+1;
+        while(m.find(t) != m.end()) {
+            ret++;
+            m.erase(t++);
+        }
+        return ret;
+    }
+    int longestConsecutive(vector<int> &num) {
+        // Start typing your C/C++ solution below
+        // DO NOT write int main() function
+        for(int i=0; i<num.size(); ++i)
+            m.insert(num[i]);
+        int maxlen=0;
+        for(int i=0; i<num.size(); ++i) {
+            int len=findAndDelete(num[i]);
+            if(len>maxlen)
+                maxlen=len;
+        }
+        return maxlen;
+    }
+};
+
+
+
+//Palindrome Partitioning
+class Solution {
+public:
+    set< pair<int,int> > pa;
+    vector<vector<string> > res;
+	void find(vector<string> curV, int startPos, string &s) {
+		if(startPos >= s.length()){
+			res.push_back(curV);
+			return;
+		}
+		for(int ep=startPos; ep<s.length(); ep++) {
+			if(pa.find(pair<int,int>(startPos, ep)) != pa.end()) {
+				vector<string> newV=curV;
+				newV.push_back(s.substr(startPos, ep-startPos+1));
+				find(newV, ep+1, s);
+			}
+		}
+	}
+	vector<vector<string> > partition(string s) {
+        // Start typing your C/C++ solution below
+        // DO NOT write int main() function
+		res.clear();
+		pa.clear();
+        for(int i=0; i<s.length(); i++)
+			pa.insert(pair<int,int>(i,i));
+		for(int i=0; i<s.length()-1; i++)
+			if(s[i]==s[i+1])
+				pa.insert(pair<int,int>(i,i+1));
+		for(int i=3;i<=s.length();i++) {
+			for(int start=0; start<s.length()-(i-1); start++) {
+				if(s[start]==s[start+i-1] && pa.find(pair<int,int>(start+1, start+i-2)) != pa.end())
+					pa.insert(pair<int,int>(start, start+i-1));
+				}
+			}
+		vector<string> vec;
+		find(vec,0,s);
+		return res;
+    }
+};
+
+
+
+//Palindrome Partitioning II
+class Solution {
+public:
+    set< pair<int,int> > pa;
+    vector<vector<string> > res;
+    int minCuts;
+	void update(int cuts) {
+		if(cuts<minCuts)
+			minCuts=cuts;
+	}
+	void find(vector<string> curV, int startPos, string &s, int cuts) {
+		if(startPos >= s.length()){
+			res.push_back(curV);
+			update(cuts);
+			return;
+		}
+		for(int ep=startPos; ep<s.length(); ep++) {
+			if(pa.find(pair<int,int>(startPos, ep)) != pa.end()) {
+				vector<string> newV=curV;
+				newV.push_back(s.substr(startPos, ep-startPos+1));
+				find(newV, ep+1, s, cuts+1);
+			}
+		}
+	}
+	int minCut(string s) {
+        // Start typing your C/C++ solution below
+        // DO NOT write int main() function
+		res.clear();
+		pa.clear();
+		minCuts=s.length();
+        for(int i=0; i<s.length(); i++)
+			pa.insert(pair<int,int>(i,i));
+		for(int i=0; i<s.length()-1; i++)
+			if(s[i]==s[i+1])
+				pa.insert(pair<int,int>(i,i+1));
+		for(int i=3;i<=s.length();i++) {
+			for(int start=0; start<s.length()-(i-1); start++) {
+				if(s[start]==s[start+i-1] && pa.find(pair<int,int>(start+1, start+i-2)) != pa.end())
+					pa.insert(pair<int,int>(start, start+i-1));
+				}
+			}
+		map<pair<int,int>, int> minCutMap;
+		for(int i=0; i<s.length(); i++)
+			minCutMap[pair<int,int>(i,i)]=0;
+		for(int i=0; i<s.length()-1; i++)
+			if(pa.find(pair<int,int>(i,i+1)) != pa.end())
+				minCutMap[pair<int,int>(i,i+1)]=0;
+			else
+				minCutMap[pair<int,int>(i,i+1)]=1;
+		for(int i=3; i<=s.length(); i++) {
+			//for each interval length, compute mincuts
+			for(int start=0; start<s.length()-(i-1); start++) {
+				if(pa.find(pair<int,int>(start, start+i-1)) != pa.end()) {
+					minCutMap[pair<int,int>(start, start+i-1)] = 0;
+				} else {// not a palindrome
+					int min = minCutMap[pair<int,int>(start,start)] + minCutMap[pair<int,int>(start+1,start+i-1)]; //+1 later
+					for(int c=start+2; c<=start+i-1; c++) {
+						int newCut = minCutMap[pair<int,int>(start,c-1)] + minCutMap[pair<int,int>(c,start+i-1)];
+						if(newCut<min)
+							min=newCut;
+					}
+					min++;
+					minCutMap[pair<int,int>(start,start+i-1)] = min;
+				}
+			}
+		}
+		return minCutMap[pair<int,int>(0,s.length()-1)];
+	
+    }
+};
+
+
+
+// word ladder II
+class Solution {
+public:
+void rec(unordered_map<string, unordered_set<string> > &list, vector<vector<string> > &res, int wid, int step, string end, vector<string> 	vec, unordered_set<string> &dict){
+	if(step==0){
+     if(vec.back()==end)
+          res.push_back(vec);
+     return;
+	}
+	string curStr=vec.back();
+	for(unordered_set<string>::iterator it = list[curStr].begin(); it != list[curStr].end(); it++) {
+		vec.push_back(*it);
+		rec(list, res, wid, step-1, end, vec, dict);
+		vec.pop_back();
+     }
+}
+int findLadderss(unordered_map<string, unordered_set<string> > &list, string start, string end, unordered_set<string> &dict) {
+// Start typing your C/C++ solution below
+// DO NOT write int main() function
+	int step=1;
+	queue<string> q;
+	unordered_set<string> visited;	
+	int level=1;
+	int wid=start.length();
+	q.push(start);
+	bool found=false;
+	q.push(string(""));
+	while(!q.empty()){
+	string s=q.front();
+	q.pop();
+	if(s == "") {
+	if(q.empty())
+	break;
+	q.push(string(""));
+	level++;
+	continue;
+	}
+	visited.insert(s);
+	for(unordered_set<string>::iterator it = list[s].begin(); it != list[s].end(); it++) {
+     if(*it == end){
+          found=true;
+          return level;
+     } else if(visited.find(*it) == visited.end())
+          q.push(*t);
+	}
+	}
+	if(!found)
+	return -1;
+}
+
+vector<vector<string>> findLadders(string start, string end, unordered_set<string> &dict) {
+//build the adjacent list
+unordered_map<string, unordered_set<string> > list;
+int wid=end.length();
+for(unordered_set<string>::iterator it=dict.begin(); it != dict.end(); it++) {
+     unordered_set<string> thisList;
+     for(int i=0; i<wid; i++){
+          for(int j=0; j<26; j++){
+               char c='a'+j;
+               string t=(*it);
+               t[i]=c;
+               if(dict.find(t) != dict.end() && t != (*it))
+                    thisList.insert(t);
+               }
+          }
+     list[*it] = thisList;
+     }
+//built the list
+int level=findLadderss(list, start, end,dict); vector<vector<string> > res;
+if(level==-1)
+return res;
+vector<string> vec;
+vec.push_back(start);
+
+rec(list, res, end.length(), level, end, vec, dict);
+return res;
+}
+};
+
+//////////////////////
+#include <iostream>
+#include <string>
+#include <map>
+#include <set>
+#include <vector>
+#include <queue>
+using namespace std;
+
+class Solution {
+public:
+bool rec(map<string, int> &bo, map<string, set<string> > &list, vector<vector<string> > &res, int wid, int step, string end, vector<string> 	vec, set<string> &dict){
+	if(step==0){
+     if(vec.back()==end){
+          res.push_back(vec);
+     	cout<<"find end"<<endl;
+     	return true;
+     }
+     else {
+     	return false;
+     }
+	}
+	for(vector<string>::iterator vi=vec.begin(); vi != vec.end(); vi++)
+		cout<<*vi<<"-";
+	cout<<endl;
+	string curStr=vec.back();
+	if(bo[curStr] >= step)
+		return false;
+	bool found=false;
+	for(set<string>::iterator it = list[curStr].begin(); it != list[curStr].end(); it++) {
+		bool dup=false;
+		for(vector<string>::iterator vi=vec.begin(); vi != vec.end(); vi++){
+			if(*vi == *it)
+				dup=true;
+		}
+		if(!dup){
+		vec.push_back(*it);
+		bool ret = rec(bo, list, res, wid, step-1, end, vec, dict);
+		vec.pop_back();	
+		found = found || ret;
+		}
+     }
+     if(!found){
+     	int t=bo[curStr];
+     	if(step>t)
+     		bo[curStr]=step;
+     }
+     return found;
+}
+void backSearch(vector<vector<string> > &res, vector<string> vec, int level, map<string, int> &dist, map<string, set<string> > &list, set<string> &dict) {
+	//go from end to start, following the dist
+	if(level==0){
+		res.push_back(vec);
+		return;
+	}
+	string curStr=vec.front();
+	for(set<string>::iterator it = list[curStr].begin(); it != list[curStr].end(); it++) {
+		if(dist.find(*it)!=dist.end() && dist[*it]==level) {
+			vector<string> newVec=vec;
+			newVec.insert(newVec.begin(), *t);
+			backSearch(res, newVec, level-1, dist, list, dict);
+		}
+	}
+}
+	
+	
+	
+int findLadderss(map<string, int> &dist, map<string, set<string> > &list, string start, string end, set<string> &dict) {
+// Start typing your C/C++ solution below
+// DO NOT write int main() function
+	int step=1;
+	queue<string> q;
+	set<string> visited;	
+	int level=1;
+	int wid=start.length();
+	q.push(start);
+	bool found=false;
+	q.push(string(""));
+	while(!q.empty()){
+	string s=q.front();
+	q.pop();
+	if(s == "") {
+	if(q.empty())
+	break;
+	q.push(string(""));
+	level++;
+	continue;
+	}
+	visited.insert(s);
+	dist[s]=level;
+	for(set<string>::iterator it = list[s].begin(); it != list[s].end(); it++) {
+     if(*it == end){
+          found=true;
+          return level;
+     } else if(visited.find(*it) == visited.end())
+          q.push(*it);
+	}
+	}
+	if(!found)
+	return -1;
+}
+
+vector<vector<string> > findLadders(string start, string end, set<string> &dict) {
+//build the adjacent list
+map<string, set<string> > list;
+int wid=end.length();
+for(set<string>::iterator it=dict.begin(); it != dict.end(); it++) {
+     set<string> thisList;
+     for(int i=0; i<wid; i++){
+          for(int j=0; j<26; j++){
+               char c='a'+j;
+               string t=(*it);
+               t[i]=c;
+               if(dict.find(t) != dict.end() && t != (*it))
+                    thisList.insert(t);
+               }
+          }
+     list[*it] = thisList;
+     }
+//built the list
+cout<<"built the list"<<endl;
+map<string, int> dist;
+int level=findLadderss(list, start, end,dict); 
+vector<vector<string> > res;
+cout<<"level"<<level<<endl;
+if(level==-1)
+return res;
+vector<string> vec;
+vec.push_back(end);
+//map<string, int> bo;
+//rec(bo, list, res, end.length(), level, end, vec, dict);
+backSearch(res, vec, level, dist, list, dict);
+cout<<"total ans found"<<res.size()<<endl;
+return res;
+}
+};
+
+int main(){
+	string start="cet", end="ism";
+	set<string> dict;
+	char* words[]={"kid","tag","pup","ail","tun","woo","erg","luz","brr","gay","sip","kay","per","val","mes","ohs","now","boa","cet","pal","bar","die","war","hay","eco","pub","lob","rue","fry","lit","rex","jan","cot","bid","ali","pay","col","gum","ger","row","won","dan","rum","fad","tut","sag","yip","sui","ark","has","zip","fez","own","ump","dis","ads","max","jaw","out","btu","ana","gap","cry","led","abe","box","ore","pig","fie","toy","fat","cal","lie","noh","sew","ono","tam","flu","mgm","ply","awe","pry","tit","tie","yet","too","tax","jim","san","pan","map","ski","ova","wed","non","wac","nut","why","bye","lye","oct","old","fin","feb","chi","sap","owl","log","tod","dot","bow","fob","for","joe","ivy","fan","age","fax","hip","jib","mel","hus","sob","ifs","tab","ara","dab","jag","jar","arm","lot","tom","sax","tex","yum","pei","wen","wry","ire","irk","far","mew","wit","doe","gas","rte","ian","pot","ask","wag","hag","amy","nag","ron","soy","gin","don","tug","fay","vic","boo","nam","ave","buy","sop","but","orb","fen","paw","his","sub","bob","yea","oft","inn","rod","yam","pew","web","hod","hun","gyp","wei","wis","rob","gad","pie","mon","dog","bib","rub","ere","dig","era","cat","fox","bee","mod","day","apr","vie","nev","jam","pam","new","aye","ani","and","ibm","yap","can","pyx","tar","kin","fog","hum","pip","cup","dye","lyx","jog","nun","par","wan","fey","bus","oak","bad","ats","set","qom","vat","eat","pus","rev","axe","ion","six","ila","lao","mom","mas","pro","few","opt","poe","art","ash","oar","cap","lop","may","shy","rid","bat","sum","rim","fee","bmw","sky","maj","hue","thy","ava","rap","den","fla","auk","cox","ibo","hey","saw","vim","sec","ltd","you","its","tat","dew","eva","tog","ram","let","see","zit","maw","nix","ate","gig","rep","owe","ind","hog","eve","sam","zoo","any","dow","cod","bed","vet","ham","sis","hex","via","fir","nod","mao","aug","mum","hoe","bah","hal","keg","hew","zed","tow","gog","ass","dem","who","bet","gos","son","ear","spy","kit","boy","due","sen","oaf","mix","hep","fur","ada","bin","nil","mia","ewe","hit","fix","sad","rib","eye","hop","haw","wax","mid","tad","ken","wad","rye","pap","bog","gut","ito","woe","our","ado","sin","mad","ray","hon","roy","dip","hen","iva","lug","asp","hui","yak","bay","poi","yep","bun","try","lad","elm","nat","wyo","gym","dug","toe","dee","wig","sly","rip","geo","cog","pas","zen","odd","nan","lay","pod","fit","hem","joy","bum","rio","yon","dec","leg","put","sue","dim","pet","yaw","nub","bit","bur","sid","sun","oil","red","doc","moe","caw","eel","dix","cub","end","gem","off","yew","hug","pop","tub","sgt","lid","pun","ton","sol","din","yup","jab","pea","bug","gag","mil","jig","hub","low","did","tin","get","gte","sox","lei","mig","fig","lon","use","ban","flo","nov","jut","bag","mir","sty","lap","two","ins","con","ant","net","tux","ode","stu","mug","cad","nap","gun","fop","tot","sow","sal","sic","ted","wot","del","imp","cob","way","ann","tan","mci","job","wet","ism","err","him","all","pad","hah","hie","aim","ike","jed","ego","mac","baa","min","com","ill","was","cab","ago","ina","big","ilk","gal","tap","duh","ola","ran","lab","top","gob","hot","ora","tia","kip","han","met","hut","she","sac","fed","goo","tee","ell","not","act","gil","rut","ala","ape","rig","cid","god","duo","lin","aid","gel","awl","lag","elf","liz","ref","aha","fib","oho","tho","her","nor","ace","adz","fun","ned","coo","win","tao","coy","van","man","pit","guy","foe","hid","mai","sup","jay","hob","mow","jot","are","pol","arc","lax","aft","alb","len","air","pug","pox","vow","got","meg","zoe","amp","ale","bud","gee","pin","dun","pat","ten","mob"};
+	int i=0;
+	while(words[i]){
+		cout<<words[i]<<endl;
+		dict.insert(string(words[i]));
+		i++;
+	}
+	cout<<dict.size()<<*(dict.begin())<<endl;
+	Solution sol;
+	sol.findLadders(start, end, dict);
+}
+
+
+
+// binary tree maximun path sum. passed both small and large.
+
+class Solution {
+public:
+	map<TreeNode*, int> maxS;
+	int getMaxS(TreeNode* n) {
+		if(maxS.find(n) != maxS.end())
+			return maxS[n];
+		// compute
+		int leftS, rightS;
+		if(n->left)
+			leftS=getMaxS(n->left);
+		if(n->right)
+			rightS=getMaxS(n->right);
+		int ret;
+		if(n->left && n->right)
+			ret = n->val + max(0, max(leftS, rightS));
+		else if(n->left && !n->right)
+			ret = n->val + max(0,leftS);
+		else if(n->right && !n->left)
+			ret = n->val + max(0,rightS);
+		else
+			ret = n->val;
+		maxS[n] = ret;
+		return ret;
+	}
+	int maxPath;
+	void combine(TreeNode* n) {
+		if(!n)
+			return;
+		if(n->left && n->right)
+			maxPath=max(maxPath, n->val + max(0,maxS[n->left])+ max(0,maxS[n->right]));
+		else if(n->left && !n->right)
+			maxPath=max(maxPath, n->val + max(0,maxS[n->left]));
+		else if(!n->left && n->right)
+			maxPath=max(maxPath, n->val + max(0,maxS[n->right]));
+		else
+			maxPath=max(maxPath, n->val);
+		combine(n->left);
+		combine(n->right);
+	}
+		
+    int maxPathSum(TreeNode *root) {
+        // Start typing your C/C++ solution below
+        // DO NOT write int main() function
+        maxPath=-999;
+		maxS.clear();
+		getMaxS(root);
+		combine(root);
+		return maxPath;
+    }
+};
+
+//path sum
+class Solution {
+public:
+	int s;
+	bool found;
+	void func(TreeNode* n, int sum, int curSum) {
+		curSum+=n->val;
+		if(!n->left && !n->right){
+			if(curSum==sum)
+				found=true;
+			
+		}
+		if(n->left)
+			func(n->left, sum, curSum);
+		if(n->right)
+			func(n->right, sum, curSum);
+	}
+    bool hasPathSum(TreeNode *root, int sum) {
+        // Start typing your C/C++ solution below
+        // DO NOT write int main() function
+        found=false;
+		s=0;
+		if(root==NULL)
+			return false;
+		func(root, sum, 0);
+		return found;
+    }
+};
+//path sum II
+class Solution {
+public:
+	vector<vector<int> > res;
+	void func(TreeNode* n, int sum, int curSum, vector<int> curV) {
+		curSum+=n->val;
+		curV.push_back(n->val);
+		if(!n->left && !n->right){
+			if(curSum==sum)
+				res.push_back(curV);
+		}
+		if(n->left)
+			func(n->left, sum, curSum, curV);
+		if(n->right)
+			func(n->right, sum, curSum, curV);
+	}
+    vector<vector<int> > pathSum(TreeNode *root, int sum) {
+        // Start typing your C/C++ solution below
+        // DO NOT write int main() function
+        res.clear();
+		if(root==NULL)
+			return res;
+		vector<int> vec;
+		func(root, sum, 0, vec);
+		return res;
+    }
+};
+
+//minimal depth
+class Solution {
+public:
+    int minDepth(TreeNode *root) {
+        // Start typing your C/C++ solution below
+        // DO NOT write int main() function
+        if(!root)
+			return 0;
+		if(!root->left && !root->right)
+			return 1;
+		if(!root->left && root->right)
+			return minDepth(root->right)+1;
+		if(!root->right && root->left)
+			return 1+minDepth(root->left);
+			
+		return 1+min(minDepth(root->left), minDepth(root->right));
+    }
+};
+
+// convert sorted list to binary search tree
+/**
+ * Definition for singly-linked list.
+ * struct ListNode {
+ *     int val;
+ *     ListNode *next;
+ *     ListNode(int x) : val(x), next(NULL) {}
+ * };
+ */
+/**
+ * Definition for binary tree
+ * struct TreeNode {
+ *     int val;
+ *     TreeNode *left;
+ *     TreeNode *right;
+ *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}
+ * };
+ */
+class Solution {
+public:
+    // 1 or more ... 
+    ListNode *findMid(ListNode * n){
+        int len=0;
+        ListNode *nn=n;
+        while(nn){
+            nn=nn->next;
+            len++;
+        }
+        for(int i=0;i<len/2-1;   i++)
+            n=n->next;
+        //ListNode *mid=n->next;
+        //n->next=NULL;
+        return n;
+    }
+    TreeNode* sortRec(ListNode *n){
+        
+        if(!n->next){
+            TreeNode* single=new TreeNode(n->val);
+            return single;
+        }
+        ListNode *mid=findMid(n);
+        ListNode *realMid=mid->next;
+        TreeNode *tn=new TreeNode(realMid->val);
+        mid->next=NULL;
+        ListNode *rightStart=realMid->next;
+        realMid->next=NULL;
+        tn->left=sortRec(n);
+        if(rightStart)
+            tn->right=sortRec(rightStart);
+        return tn;
+    }
+    TreeNode *sortedListToBST(ListNode *head) {
+        // Start typing your C/C++ solution below
+        // DO NOT write int main() function
+        if(!head)
+            return NULL;
+        return sortRec(head);
+    }
+};
+
+//convert sorted array to binary search tree
+
+class Solution {
+public:
+    TreeNode* convert(vector<int> &v, int a, int b){
+        if(a>b)
+            return NULL;
+        if(a==b){
+            TreeNode *tn=new TreeNode(v[a]);
+            return tn;
+        }
+        int mid=(b-a)/2+a;
+        TreeNode *tnn=new TreeNode(v[mid]);
+        tnn->left=convert(v, a, mid-1);
+        tnn->right=convert(v, mid+1, b);
+        return tnn;
+    }
+    TreeNode *sortedArrayToBST(vector<int> &num) {
+        // Start typing your C/C++ solution below
+        // DO NOT write int main() function
+        return convert(num, 0, num.size()-1);
+    }
+};
+
+//binary tree level order traversal
+class Solution {
+public:
+           vector<vector<int> > res;
+
+    vector<vector<int> > levelOrderBottom(TreeNode *root) {
+        // Start typing your C/C++ solution below
+        // DO NOT write int main() function
+    res.clear();
+    if(!root)
+            return res;
+        stack<vector<int> > stk;
+        queue<TreeNode *> q;
+        q.push(root);
+        q.push(NULL);
+        vector<int> v;
+        //v.push_back(root->val);
+        while(!q.empty()){
+            TreeNode *n=q.front();
+            q.pop();
+            if(n==NULL){
+                stk.push(v);
+                v.clear();
+                if(!q.empty()){
+                    q.push(NULL);
+                    continue;
+                }else
+                    break;
+            }
+            v.push_back(n->val);
+            if(n->left)
+                q.push(n->left);
+            if(n->right)
+                q.push(n->right);
+        }
+        while(stk.empty() == false){
+            res.push_back(stk.top());
+            stk.pop();
+        }
+        return res;
+    }
+};
+
+//construct binary tree from inorder and post order traversal
+/**
+ * Definition for binary tree
+ * struct TreeNode {
+ *     int val;
+ *     TreeNode *left;
+ *     TreeNode *right;
+ *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}
+ * };
+ */
+class Solution {
+public:
+    TreeNode *recBuild(vector<int> &in, int ina, int inb, vector<int> &post, int posta, int postb){
+        TreeNode *ret=NULL;
+        if(ina==inb){
+            ret=new TreeNode(in[ina]);
+            return ret;
+        }
+        int i=0;
+        int midVal=post[postb];
+        ret=new TreeNode(midVal);
+        while(in[ina+i] != midVal){
+            i++;
+        }
+        if(i>0)
+            ret->left=recBuild(in, ina, ina+i-1, post, posta, posta+i-1);
+        if(ina+i<inb)
+            ret->right=recBuild(in, ina+i+1, inb, post, posta+i, postb-1);
+        return ret;
+    }
+    TreeNode *buildTree(vector<int> &inorder, vector<int> &postorder) {
+        if(inorder.size()==0)
+            return NULL;
+        return recBuild(inorder, 0, inorder.size()-1, postorder, 0, postorder.size()-1);
+    }
+};
+
+// maximal depth of binary tree
+class Solution {
+public:
+    int maxDepth(TreeNode *root) {
+        // Start typing your C/C++ solution below
+        // DO NOT write int main() function
+        if(!root)
+            return 0;
+        return max(maxDepth(root->left), maxDepth(root->right)) + 1;
+    }
+};
+
+
+
+
+
+
+// Reverse Linked List II
+class Solution {
+public:
+    ListNode *reverseBetween(ListNode *head, int m, int n) {
+        ListNode *mNode;
+        ListNode *nNode;
+        ListNode *b4m = NULL;
+        ListNode *aftern = NULL;
+        bool mIsLast=false;
+        if(m==n)
+            return head;
+        ListNode* cur=head;
+        ListNode* prev;
+        for(int i=1;i<=n+1;i++){
+            if(i==n+1){
+                aftern=cur;
+                if(!cur){
+                    mIsLast=true;
+                    break;
+                }
+            }
+            ListNode* next=cur->next;
+            if(i==m-1)
+                b4m=cur;
+            if(i==m)
+                mNode=cur;
+            else if(i==n){
+                nNode=cur;
+                nNode->next=prev;
+            }
+            else if(i>m && i<n){
+                cur->next=prev;
+            }
+            prev=cur;
+            cur=next;
+        }
+		if(!b4m)
+			head=nNode;
+		else
+			b4m->next=nNode;
+		mNode->next=aftern;
+		return head;
+    }
+};
+
+// merge sorted array
+class Solution {
+public:
+    void merge(int A[], int m, int B[], int n) {
+        // Start typing your C/C++ solution below
+        // DO NOT write int main() function
+        int ai=m-1;
+        int bi=n-1;
+        int mergei=m+n-1;
+        while(ai>=0 || bi>=0) {
+            if(ai<0){
+                A[mergei--]=B[bi--];
+            } else if(bi<0) {
+                A[mergei--]=A[ai--];
+            }
+            else if(A[ai]>=B[bi]) {
+                A[mergei--]=A[ai--];
+            } else {
+                A[mergei--]=B[bi--];
+            }
+        }
+    }
+};
+
+
+// remove dup from sorted list I
+class Solution {
+public:
+    ListNode *deleteDuplicates(ListNode *head) {
+        // Start typing your C/C++ solution below
+        // DO NOT write int main() function
+        ListNode *t=head;
+        ListNode *prev=NULL;
+        //bool dup=false;
+        while(t) {
+            if(prev && prev->val == t->val) {
+                prev->next=t->next;
+                t=prev->next;
+            } else {
+                prev=t;
+                t=t->next;
+            }
+        }
+        return head;
+    }
+};
+
+// remove dup from sorted list II
+class Solution {
+public:
+    void remove(ListNode* n, int val, ListNode* &ret) {
+        if(!n) {
+            while(ret && ret->val == val)
+                ret=ret->next;
+        } else {
+            while(n->next && n->next->val == val) {
+                n->next=n->next->next;
+            }
+        }
+    }
+    ListNode *deleteDuplicates(ListNode *head) {
+        ListNode *cur=head;
+        ListNode *prev=NULL;
+        ListNode *ret=head;
+        set<int> dup;
+        set<int> visit;
+        while(cur) {
+            if(visit.find(cur->val) != visit.end())
+                dup.insert(cur->val);
+            else
+                visit.insert(cur->val);
+            cur=cur->next;
+        }
+        cur=head;
+        while(cur) {
+            if(dup.find(cur->val) != dup.end())
+                remove(prev, cur->val, ret);
+            else {
+                prev=cur;
+            }
+            int value=cur->val;
+            while(cur && cur->val == value)
+                cur=cur->next;
+        }
+        return ret;
+    }
+};
+
+
+//word search
+class Solution {
+public:
+    bool existRec(vector<vector<char> > &visited, vector<vector<char> > &board, int x, int y, string word, int i){
+        if(i==word.length())
+            return true;
+        if((x<0 || x>=visited.size()) || (y<0 || y>=visited[0].size()))
+            //out of range
+            return false;
+        if(visited[x][y]=='v')
+            return false;
+        if(board[x][y] != word[i])
+            return false;
+        else{
+            visited[x][y]='v';
+            if(existRec(visited, board, x-1, y, word, i+1))
+                return true;
+            if(existRec(visited, board, x+1, y, word, i+1))
+                return true;
+            if(existRec(visited, board, x, y-1, word, i+1))
+                return true;
+            if(existRec(visited, board, x, y+1, word, i+1))
+                return true;
+            //unmark
+            visited[x][y]='u';
+            return false;
+        }
+        
+    }
+    bool exist(vector<vector<char> > &board, string word) {
+        // Start typing your C/C++ solution below
+        // DO NOT write int main() function
+        if(board.size()<1 || board[0].size()<1)
+            return false;
+        vector<vector<char> > visited = board;
+        for(int x=0;x<board.size();x++)
+            for(int y=0; y<board[0].size(); y++)
+                visited[x][y]='u';
+        for(int x=0;x<board.size();x++)
+            for(int y=0; y<board[0].size(); y++) {
+                
+                if(existRec(visited, board, x,y,word, 0))
+                    return true;
+            }
+        return false;
+    }
+};
+
+//remove dup from sorted array II
+class Solution {
+public:
+    int removeDuplicates(int A[], int n) {
+        // Start typing your C/C++ solution below
+        // DO NOT write int main() function
+        int min=A[0]-1;
+        int cur=0;
+        int s=0;
+        int curV=A[0];
+        int count=0;
+        while(cur<n) {
+            if(A[cur]==curV)
+                count++;
+            else {
+                if(count>2)
+                    for(int t=s+2; t<cur; t++)
+                        A[t]=min;
+                count=1;
+                curV=A[cur];
+                s=cur;
+            }
+            cur++;
+        }
+        if(count>2)
+            for(int t=s+2; t<n; t++)
+                    A[t]=min;
+        cur=0; s=0;
+        while(cur<n) {
+            if(A[cur] != min){
+                A[s]=A[cur];
+                cur++;
+                s++;
+            
+            }
+            else
+                cur++;
+        }
+        return s;
+    }
+};
+
+//find median in sorted arrays
+class Solution {
+public:
+  double getMed(int A[], int a, int b){
+    if((b-a)%2==0)
+       return A[(a+b)/2];
+     else
+       return (A[(a+b)/2]+A[(a+b)/2+1])/2.0;
+  }
+  double getMed2(int arr[], int a, int b, int val) {
+	if(a==b)
+		return (arr[a]+val)/2.0;
+     if((b-a)%2==0) {
+       int x=arr[(a+b)/2-1];
+       int y=arr[(a+b)/2];
+       int z=arr[(a+b)/2+1];
+       if(val <= x)
+          return (x+y)/(2.0);
+       else if(val >= z)
+          return (y+z)/(2.0);
+       else
+          return (val+y)/(2.0);
+     } else {
+       int x=arr[(a+b)/2];
+       int y=arr[(a+b)/2+1];
+       if(val <= x)
+          return x;
+       else if(val >= y)
+          return y;
+       else
+          return val;
+     }
+  }
+  double find(int A[], int a1,int a2, int B[], int b1,int b2) {
+	if(a2<a1) {
+		if((b2-b1)%2 == 0)
+			return B[(b2+b1)/2];
+		else
+			return (B[(b2+b1)/2]+B[(b2+b1)/2+1])/2.0;
+	}
+	if(b2<b1) {
+		if((a2-a1)%2 == 0)
+			return A[(a2+a1)/2];
+		else
+			return (A[(a2+a1)/2]+A[(a2+a1)/2+1])/2.0;
+	}
+     if(a1==a2 && b1==b2)
+       return (A[a1]+B[b1])/(2.0);
+     if(a2==a1) {
+       int aval=A[a1];
+       if(aval <= B[b1])
+          return getMed(B, b1, b2-1);
+       else if(aval >= B[b2])
+          return getMed(B, b1+1, b2);
+       else {//aval within B
+          return getMed2(B, b1, b2, aval);
+       }
+     } else if(b1==b2) {
+       int bval=B[b1];
+       if(bval <= A[a1])
+          return getMed(A, a1, a2-1);
+       else if(bval >= A[a2])
+          return getMed(A, a1+1, a2);
+       else {//aval within B
+          return getMed2(A, a1, a2, bval);
+       }
+     }
+     if(a1+1==a2) {
+		if(A[a1]<B[b1]) {
+			if(A[a2]>B[b2])
+				return getMed(B, b1, b2);
+			else
+				return getMed2(B,b1,b2-1,A[a2]);
+		} else {
+			if(A[a2]>B[b2])
+				return getMed2(B,b1+1,b2,A[a1]);
+			else
+				return find(A,a1,a2,B,b1+1,b2-1);
+			}
+		} else if(b1+1==b2) {
+		if(B[b1]<A[a1]) {
+			if(B[b2]>A[a2])
+				return getMed(A, a1, a2);
+			else
+				return getMed2(A,a1,a2-1,B[b2]);
+		} else {
+			if(B[b2]>A[a2])
+				return getMed2(A,a1+1,a2,B[b1]);
+			else
+				return find(A,a1+1,a2-1,B,b1,b2);
+			}
+		}
+     double vam, vbm;
+	 if((a2-a1)%2 == 0)
+		vam = A[(a1+a2)/2];
+	else
+		vam = (A[(a1+a2)/2]+A[(a1+a2)/2+1])/2.0;
+	 if((b2-b1)%2 == 0)
+		vbm = B[(b1+b2)/2];
+	else
+		vbm = (B[(b1+b2)/2]+B[(b1+b2)/2+1])/2.0;
+		
+	
+		
+     int am=(a1+a2)/2;
+     int bm=(b1+b2)/2;
+     int cuta=a2-am;
+     if((a2-a1)%2 != 0)
+        cuta=cuta-1;
+     int cutb=b2-bm;
+     if((b2-b1)%2 != 0)
+        cutb=cutb-1;
+     if(vam>vbm) {
+       if(cuta>cutb)
+          return find(A, a1, a2-cutb, B, b1+cutb, b2);
+       else
+          return find(A, a1, a2-cuta, B, b1+cuta, b2);
+     } else if(vam<vbm) {
+       if(cuta>cutb)
+          return find(A, a1+cutb, a2, B, b1, b2-cutb);
+       else
+          return find(A, a1+cuta, a2, B, b1, b2-cuta);
+     } else { //
+        if((a2-a1)%2 == 0 || (b2-b1)%2 == 0) {
+            return vam;
+        } 
+        else {
+                //both even length
+                int x=A[am];
+                int y=B[bm];
+                int p=A[am+1];
+                int q=B[bm+1];
+                int z=(p>q) ? q:p;
+                int zz=(x>y)?x:y;
+                return (zz+z)/2.0;
+        }
+     }
+  }
+    double findMedianSortedArrays(int A[], int m, int B[], int n) {
+        // Start typing your C/C++ solution below
+        // DO NOT write int main() function
+       if(m==0)
+          return getMed(B, 0, n-1);
+       else if(n==0)
+          return getMed(A, 0, m-1);
+       return find(A, 0, m-1, B, 0, n-1);
+    }
+};
+
+
+//longest substring without repeating characters
+class Solution {
+public:
+    int lengthOfLongestSubstring(string s) {
+        if(s.length()==0)
+            return 0;
+        int charIdx[26];
+        for(int i=0;i<26;i++)
+            charIdx[i]=-1;
+        int cur=0, from=0;
+        int maxL=-1;
+        int nonDupStart=0;
+        while(cur<s.length()){
+            if(charIdx[s[cur]-'a'] == -1) {
+                charIdx[s[cur]-'a'] = cur;
+                maxL=max(maxL, cur-nonDupStart+1);
+            }
+            else {//dup
+                int lastAppear=charIdx[s[cur]-'a'];
+                if(lastAppear>=nonDupStart) {
+                maxL=max(maxL, cur-lastAppear);
+                nonDupStart=lastAppear+1;
+                } else {
+                    maxL=max(maxL, cur-nonDupStart+1);
+                }
+                charIdx[s[cur]-'a'] = cur;
+                
+            }
+            cur++;
+        }
+        return maxL;
+    }
+};
+
+// jump game
+class Solution {
+public:
+    bool canJump(int A[], int n) {
+        // Start typing your C/C++ solution below
+        // DO NOT write int main() function
+        if(n<1)
+            return false;
+        int reach=0;
+        for(int i=0;i<n-1;i++) {
+            if(reach>=i)
+            reach=max(reach, i+A[i]);
+        }
+        if(reach>=n-1)
+            return true;
+        else
+            return false;
+        //return reachable[n-1];
+    }
+};
+
+//trap water 
+class Solution {
+public:
+    int trap(int A[], int n) {
+        // Start typing your C/C++ solution below
+        // DO NOT write int main() function
+        int leftMax[n];
+        int rightMax[n];
+        
+        leftMax[0]=0;
+        for(int i=1; i<n; i++) {
+            leftMax[i]=max(leftMax[i-1], A[i-1]);
+        }
+        rightMax[n-1]=0;
+        for(int i=n-2; i>=0; i--) {
+            rightMax[i]=max(rightMax[i+1], A[i+1]);
+        }
+        int trapV=0;
+        for(int i=1;i<n-1;i++) {
+            int bound = min(leftMax[i], rightMax[i]);
+            trapV+= (bound>A[i]) ? bound-A[i]:0;
+        }
+        return trapV;
+    }
+};
+
+// first missing positive
+class Solution {
+public:
+    int firstMissingPositive(int A[], int n) {
+        // Start typing your C/C++ solution below
+        // DO NOT write int main() function
+        int cur=0;
+        while(cur<n) {
+            if(A[cur]==cur+1)
+                cur++;
+            else if(A[cur]<=0)
+                cur++;
+            else {
+                if(A[cur]>n){
+                    A[cur]=-1;
+                    cur++;
+                }
+                else {
+                    int temp=A[A[cur]-1];
+                    if(temp == A[cur])
+                        A[cur]=-1;
+                    else{
+                    A[A[cur]-1] = A[cur];
+                    A[cur] = temp;
+                    }
+                }
+            }
+        }
+        int i=0;
+        while(A[i]==i+1)
+            i++;
+        return i+1;
+    }
+};
+
+// search insert position
+class Solution {
+public:
+    int searchInsert(int A[], int n, int target) {
+        // Start typing your C/C++ solution below
+        // DO NOT write int main() function
+        if(n==1) {
+            if(A[0]>=target)
+                return 0;
+            else return 1;
+        }
+        if(n==2) {
+            if(A[0]>=target)
+                return 0;
+            else if(A[1]>=target)
+                return 1;
+            else
+                return 2;
+        }
+        int mid=n/2;
+        if(A[mid]>=target)
+            return searchInsert(A, mid, target);
+        else
+            return mid+searchInsert(A+mid, n-mid, target);
+    }
+};
+
+// LRU implementation  (double linkedlist + hashmap)
+class node {
+	T val;
+	node* prev;
+	node* next;
+	}
+class dLL {
+	node* head;
+	node* tail;
+	int size;
+	node* remove(node* n);
+	void append(node* n);
+	void prepend(node* n);
+	}
+class LRU {
+	int cacheSize;
+	dLL dll;
+	hashmap<val, node*> hash;
+	get(T t) {
+		if(node *n=hash.find(t)) {
+			dll.remove(n);
+			dll.prepend(n);
+		} else if(dLL.size == cacheSize) {
+			hash.remove(dll.tail->val);
+			dll.remove(dll.tail);
+			node *newNode;
+			newNode->val=T;
+			dll.prepend(newNode);
+			hash[t]=dll.head;
+		} else {
+			node *newNode;
+			newNode->val=T;
+			dll.prepend(newNode);
+			hash[t]=dll.head;
+			dll.size=dll.size+1;
+		}
+	}
+}
+
+//字符串匹配
+#include <set>
+// 预处理初始化
+#define NUM 29
+set<long long> hash;
+void initWithString(char *str) {
+    int len=strlen(str);
+    for(int i=1;i<=10;i++) {
+        long long res[len];
+        for(int start=0;start+i<=len;start++) {
+            // start ... start+i-1
+            long long sum=0;
+            if(start == 0){
+                for(int each=0;each<i;each++)
+                    sum=sum*NUM+str[start + each];
+                hash.insert(sum);
+            } else {
+                long long subtract=1;
+                for(int k=0; k < i-1; k++)
+                    subtract=subtract*NUM;
+                sum = (res[start-1] - subtract*str[start-1])*NUM + str[start+i-1];
+                hash.insert(sum);
+            }
+            res[start] = sum;
+        }
+    }
+}
+// 如果query是str的字串,返回true,否则返回false
+bool existSubString(char *query) {
+    int len=strlen(query);
+    long long sum=0;
+    for(int i=0; i<len; i++) {
+        sum=sum*NUM+query[i];
+    }
+    if(hash.find(sum) != hash.end())
+        return true;
+    else
+        return false;
+    
+}
+
+
+// implement strstr
+class Solution {
+public:
+    char *strStr(char *haystack, char *needle) {
+        // Start typing your C/C++ solution below
+        // DO NOT write int main() function
+        char *h=haystack;
+        if(!h || !needle)
+            return NULL;
+        if(*needle == '\0')
+            return haystack;
+        while(*h !='\0') {
+            char *n=needle;
+            char *hh=h;
+            while(*n !='\0') {
+                if(*n != *hh)
+                    break;
+                n++;
+                hh++;
+            }
+            if(*n == '\0')
+                return h;
+            else
+                h++;
+        }
+        return NULL;
+    }
+};
+
+// faster version strstr
+class Solution {
+public:
+    char *strStr(char *haystack, char *needle) {
+        // Start typing your C/C++ solution below
+        // DO NOT write int main() function
+        char *h=haystack;
+        if(!h || !needle)
+            return NULL;
+        if(*needle == '\0')
+            return haystack;
+        char *ahead=h;
+        char *temp=needle;
+        while(*temp++)
+            ahead++;
+        ahead--;
+        while(*ahead !='\0') {
+            char *n=needle;
+            char *hh=h;
+            while(*n !='\0') {
+                if(*n != *hh)
+                    break;
+                n++;
+                hh++;
+            }
+            if(*n == '\0')
+                return h;
+            else{
+                h++;
+                ahead++;
+            }
+        }
+        return NULL;
+    }
+};
+
+// remove elements
+class Solution {
+public:
+    int removeElement(int A[], int n, int elem) {
+        // Start typing your C/C++ solution below
+        // DO NOT write int main() function
+        int old=0, newI=0;
+        while(old<n) {
+            if(A[old]==elem)
+                old++;
+            else
+                A[newI++]=A[old++];
+        }
+        return newI;
+    }
+};
+
+// remove duplicates from sorted array
+class Solution {
+public:
+    int removeDuplicates(int A[], int n) {
+        // Start typing your C/C++ solution below
+        // DO NOT write int main() function
+        int old=0, newI=0;
+        if(n<1)
+            return 0;
+        int cur=A[0]-1;
+        while(old<n) {
+            if(A[old]==cur)
+                old++;
+            else {
+                cur=A[old];
+                A[newI++]=A[old++];
+            }
+        }
+        return newI;
+    }
+};
+
+// multiply string
+class Solution {
+public:
+    string multiply(string num1, string num2) {
+        // Start typing your C/C++ solution below
+        // DO NOT write int main() function
+        int len1=num1.length();
+        int len2=num2.length();
+        string res;
+        int r[len1+len2];
+        for(int i=0; i<len1+len2; i++)
+            r[i]=0;
+        for(int i=len2-1; i>=0; i--)
+            for(int j=len1-1; j>=0; j--) {
+                r[i+j+1]=r[i+j+1]+(num1[j]-'0')*(num2[i]-'0');
+            }
+        for( int i=len1+len2-1; i>0; i--) {
+            if(r[i]>9) {
+                int c=r[i]/10;
+                r[i]=r[i]%10;
+                r[i-1]=r[i-1]+c;
+            }
+        }
+        int idx=0;
+        while(r[idx]==0)
+            idx++;
+        if(idx==len1+len2)
+            res.append(1,'0');
+        while(idx<len1+len2){
+            res.append(1, r[idx]+'0');
+            idx++;
+        }
+        return res;
+    }
+};
+
+// compute pow
+class Solution {
+public:
+    map<long long, double> res;
+    double power(double x, long long n) {
+        // Start typing your C/C++ solution below
+        // DO NOT write int main() function
+        if(n==0)
+            return 1;
+        if(n==1)
+            return x;
+        if(n<0)
+            return 1.0/power(x, -n);
+        long long m=n/2;
+        double re1=(res.find(m) != res.end()) ? res[m]:power(x, m);
+        if(res.find(m)==res.end())
+            res[m]=re1;
+        double re2=(res.find(n-m) != res.end()) ? res[n-m]:power(x, n-m);
+        if(res.find(n-m)==res.end())
+            res[n-m]=re2;
+        return re1 * re2;
+            
+    }
+    double pow(double x, int n) {
+        res.clear();
+        return power(x, n);
+    }
+};
+
+// regular expression
+// (use dynamic programming
+class Solution {
+public:
+    bool isMatch(const char *s, const char *p) {
+        // Start typing your C/C++ solution below
+        // DO NOT write int main() function    
+        int sc=strlen(s);
+        int pl=strlen(p);
+        int star=0;
+        for(int i=0; i<pl; i++)
+            if(p[i]=='*')
+                star++;
+        int pc=pl-star;
+        bool match[sc+1][pl+1];
+        match[0][0]=true;
+        for(int i=1; i<=sc; i++)
+            match[i][0]=false;
+        int i;
+        for(i=1; i<pl; i++) {
+            if(p[i]=='*'){
+                match[0][i]=true;
+                match[0][i+1]=true;
+                i++;
+            } else {
+                break;
+            }
+        }
+        while(i<=pl) {
+            match[0][i]=false;
+            i++;
+        }
+        for(int x=1; x<=sc; x++)
+            for(int y=1; y<=pl; y++) {
+                if((y<pl && p[y] != '*') || y==pl)
+                    match[x][y]=(p[y-1]=='.' || p[y-1]==s[x-1]) ? match[x-1][y-1] : false;
+                else if(p[y-1]=='.'){
+                    match[x][y]=match[x][y-1] || match[x-1][y];
+                    match[x][y+1]=match[x][y-1] || match[x-1][y];
+                    y++;
+                } else { // a* case
+                    bool res=match[x][y-1] || (s[x-1]==p[y-1] && match[x-1][y]);
+                    match[x][y]=res;
+                    match[x][y+1]=res;
+                    y++;
+                }
+            }
+        return match[sc][pl];
+    }
+};
+
+// 4 sum
+class Solution {
+public:
+    void find2Sum(vector<int> &num, int t, int s, int e, vector<vector<int> > &res, int a, int b) {
+        int prevs=b-1;
+        int preve=b-1;
+        while(s<e) {
+            int sum=num[s] + num[e];
+            if(sum>t)
+                e--;
+            else if(sum<t)
+                s++;
+            else {
+                if(num[s]!=prevs && num[e]!=preve) {
+                vector<int> add;
+                add.push_back(a);
+                add.push_back(b);
+                add.push_back(num[s]);
+                add.push_back(num[e]);
+                res.push_back(add);
+                
+                prevs=num[s];
+                preve=num[e];
+                }
+                s++;
+                e--;
+            }
+        }
+    }
+    vector<vector<int> > fourSum(vector<int> &num, int target) {
+        // Start typing your C/C++ solution below
+        // DO NOT write int main() function
+        vector<vector<int> > res;
+        int size=num.size();
+       sort(num.begin(), num.end());
+        int a,b,c,d;
+        for(a=0; a<size-3; a++){
+            if(a>0 && num[a] == num[a-1])
+                continue;
+            for(b=a+1; b<size-2; b++) {
+                if(b>a+1 && num[b] == num [b-1])
+                    continue;
+                int t=target- num[a] -num[b];
+                find2Sum(num, t, b+1, size-1, res, num[a], num[b]);
+            }
+        }
+        return res;
+    }
+};
+
+
+
+// simplify path
+class Solution {
+public:
+    string simplifyPath(string path) {
+        // Start typing your C/C++ solution below
+        // DO NOT write int main() function
+        stack<string> res;
+    	int i=0;
+		while(i<path.length()) {
+			while(i<path.length() && path[i]=='/')
+				i++;
+			int j=i;
+			while(j<path.length() && path[j]!='/')
+				j++;
+			j--;
+			if(j<i) {
+				i=j+1;
+				continue;
+			} else if(j==i && path[i]=='.') {
+				i=i+1; continue;
+			} else if(j==i+1 && path[i]=='.' && path[j]=='.'){
+				if(res.empty()==false)
+                    res.pop(); 
+                i=j+1; continue;
+			} else {
+				string p; p.append(1, '/');
+				p.append(path.substr(i, j-i+1));
+				res.push(p);
+                i=j+1;
+			}
+		}
+		string ret;
+		while(res.empty()==false) {
+			string s=res.top(); res.pop();
+			ret.insert(0, s);
+		}
+        if(ret.empty())
+            ret.append(1,'/');
+		return ret;
+    }
+};
+
+// climb stairs
+class Solution {
+public:
+    int climbStairs(int n) {
+        // Start typing your C/C++ solution below
+        // DO NOT write int main() function
+        int ways[n+1];
+        ways[1]=1; ways[2]=2;
+        for(int i=3;i<=n;i++) {
+            ways[i]=ways[i-1]+ways[i-2];
+        }
+        return ways[n];
+    }
+};
+
+// max subarray
+class Solution {
+public:
+    int maxSubArray(int A[], int n) {
+        // Start typing your C/C++ solution below
+        // DO NOT write int main() function
+        int maxS;
+        int prev=A[0];
+        maxS=prev;
+        for(int i=1; i<n; i++) {
+            if(prev<0){
+                maxS=max(maxS, A[i]);
+                prev=A[i];
+            }else{
+                maxS=max(maxS, prev+A[i]);
+                prev=prev+A[i];
+            }
+        }
+        return maxS;
+    }
+};
+
+// insert interval
+class Solution {
+public:
+    vector<Interval> insert(vector<Interval> &intervals, Interval newInterval) {
+        int sz=intervals.size();
+        vector<Interval> res=intervals;
+        vector<Interval> ret;
+        for(int i=0; i<sz; i++) {
+            if(newInterval.start > res[i].end || newInterval.end < res[i].start){
+                ret.push_back(res[i]);
+                continue;
+            }
+            else {
+                newInterval.start = min(newInterval.start, res[i].start);
+                newInterval.end = max(newInterval.end, res[i].end);
+            }
+        }
+        int retSz=ret.size();
+        if(retSz==0){
+            ret.push_back(newInterval);
+            return ret;
+        }
+        if(newInterval.start<ret[0].start)
+            ret.insert(ret.begin(), newInterval);
+        else if(newInterval.end>ret[retSz-1].end)
+            ret.insert(ret.end(), newInterval);
+        else {
+            vector<Interval>::iterator it=ret.begin();
+            while((*(it+1)).start < newInterval.start)
+                it++;
+            ret.insert(it+1, newInterval);
+        }
+        return ret;
+    }
+};
+
+// merge intervals
+class Solution {
+public:
+    vector<Interval> insert(vector<Interval> &intervals, Interval newInterval) {
+        int sz=intervals.size();
+        vector<Interval> res=intervals;
+        vector<Interval> ret;
+        for(int i=0; i<sz; i++) {
+            if(newInterval.start > res[i].end || newInterval.end < res[i].start){
+                ret.push_back(res[i]);
+                continue;
+            }
+            else {
+                newInterval.start = min(newInterval.start, res[i].start);
+                newInterval.end = max(newInterval.end, res[i].end);
+            }
+        }
+        int retSz=ret.size();
+        if(retSz==0){
+            ret.push_back(newInterval);
+            return ret;
+        }
+        if(newInterval.start<ret[0].start)
+            ret.insert(ret.begin(), newInterval);
+        else if(newInterval.end>ret[retSz-1].end)
+            ret.insert(ret.end(), newInterval);
+        else {
+            vector<Interval>::iterator it=ret.begin();
+            while((*(it+1)).start < newInterval.start)
+                it++;
+            ret.insert(it+1, newInterval);
+        }
+        return ret;
+    }
+    vector<Interval> merge(vector<Interval> &intervals) {
+        vector<Interval> ret;
+        int sz=intervals.size();
+        if(sz==0)
+            return ret;
+        ret.push_back(intervals[0]);
+        
+        for(int i=1; i<sz; i++) {
+            ret=insert(ret, intervals[i]);
+        }
+        return ret;
+    }
+};
+
+// construct tree from preorder and inorder traversal
+class Solution {
+public:
+    TreeNode *build(vector<int> &pre, int prea, int preb, vector<int> &in, int ina, int inb) {
+	if(prea>preb)
+		return NULL;
+	if(prea==preb) {
+		TreeNode *t=new TreeNode(pre[prea]);
+        return t;
+	}
+	int rootV=pre[prea];
+	TreeNode *root=new TreeNode(rootV);
+	int ini=ina;
+	while(in[ini] != rootV)
+		ini++;
+	root->left=build(pre, prea+1, ini-ina+prea, in, ina, ini-1);
+	root->right=build(pre, ini-ina+prea+1, preb, in, ini+1, inb);
+	return root;
+	}
+    TreeNode *buildTree(vector<int> &preorder, vector<int> &inorder) {
+		int len=preorder.size();
+		return build(preorder, 0, len-1, inorder, 0, len-1);
+    }
+};
+
+// search in rotated sorted array
+class Solution {
+public:
+    int sea(int A[], int a, int b, int t) {
+        if(a>b)
+            return -1;
+        if(a==b && A[a]==t)
+            return a;
+        if(a==b && A[a] != t)
+            return -1;
+        if(A[a]<A[b]){
+            int mid=A[(a+b)/2];
+            if(mid>=t)
+                return sea(A,a,(a+b)/2, t);
+            else
+                return sea(A,(a+b)/2+1, b, t);
+        } else {
+            int mid=A[(a+b)/2];
+            int midi=(a+b)/2;
+            if(t<=A[b]) {
+                if(mid>=t && mid<=A[b])
+                    return sea(A, a, midi, t);
+                else
+                    return sea(A, midi+1, b, t);
+            } else {
+                if(mid>=t || mid<=A[b])
+                    return sea(A,a,midi, t);
+                else
+                    return sea(A,midi+1,b,t);
+            }
+        }
+    }
+    int search(int A[], int n, int target) {
+        // Start typing your C/C++ solution below
+        // DO NOT write int main() function
+        return sea(A, 0, n-1, target);
+    }
+};
+
+// 3 sum closest
+class Solution {
+public:
+    int close;
+    void update(int u, int target) {
+        int prevGap=target-close;
+        if(prevGap<0)
+            prevGap=-prevGap;
+        int curGap=target-u;
+        if(curGap<0)
+            curGap=-curGap;
+        if(curGap<prevGap)
+            close=u;
+    }
+    int threeSumClosest(vector<int> &num, int target) {
+        // Start typing your C/C++ solution below
+        // DO NOT write int main() function
+            close=num[0]+num[1]+num[2];
+            sort(num.begin(), num.end());
+            for(int i=0; i<num.size()-2; i++) {
+                int a=num[i];
+                int j=i+1, k=num.size()-1;
+                int nt=target-a;
+                while(j<k) {
+                    update(num[j]+num[k]+a, target);
+                    if(num[j]+num[k]>nt)
+                        k--;
+                    else if(num[j]+num[k]<nt)
+                        j++;
+                    else
+                        return target;
+                }
+            }
+            return close;
+    }
+};
+
+
+// longest common prefix
+class Solution {
+public:
+    string longestCommonPrefix(vector<string> &strs) {
+        string res;
+        int sz=strs.size();
+        if(sz<1)
+            return res;
+        if(sz==1)
+            return strs[0];
+        bool end=false;
+        for(int x=0; x<strs[0].length(); x++) {
+            char c=strs[0][x];
+            for(int y=1; y<sz; y++) {
+                if(strs[y].length()<=x){
+                    end=true;
+                    break;
+                }
+                if(strs[y][x] != c) {
+                    end=true;
+                    break;
+                }
+            }
+            if(end)
+                break;
+            else
+                res.push_back(c);
+        }
+        return res;
+    }
+};
+
+// wild card matching
+class Solution {
+public:
+    bool isMatch(const char *s, const char *p) {
+        int sl=strlen(s);
+        int pl=strlen(p);
+        bool match[sl+1][pl+1];
+        match[0][0]=true;
+        int i;
+        for(i=1;i<pl+1;i++)
+            if(p[i-1]=='*')
+                match[0][i]=true;
+            else
+                break;
+        for(int j=i;j<pl+1;j++)
+            match[0][j]=false;
+        for(i=1;i<sl+1;i++)
+            match[i][0]=false;
+        for(int x=1; x<sl+1; x++)
+            for(int y=1; y<pl+1; y++) {
+                if(s[x-1] == p[y-1]){
+                    match[x][y]=match[x-1][y-1];
+                } else if(p[y-1]=='?')
+                    match[x][y]=match[x-1][y-1];
+                else if(p[y-1]=='*')
+                    match[x][y]=match[x][y-1] || match[x-1][y];
+                else
+                    match[x][y]=false;
+            }
+        return match[sl][pl];
+    }
+};
+
+
+// Permutations
+class Solution {
+public:
+    vector<vector<int> > permute(vector<int> &num) {
+        // Start typing your C/C++ solution below
+        // DO NOT write int main() function
+        vector<vector<int> > res;
+    	if(num.size()==0) return res;
+		if(num.size()==1) { vector<int> a; a.push_back(num[0]); res.push_back(a); return res; }
+		int last=num[num.size()-1];
+        vector<int> subV=num;
+		subV.resize(subV.size()-1);
+		vector<vector<int> > subperm=permute(subV);
+		for(int i=0; i<subperm.size(); i++) {
+			vector<int> v=subperm[i];
+			for(int j=0; j<=v.size(); j++) {
+				vector<int> vt=v;
+				vt.insert(vt.begin()+j, last);
+				res.push_back(vt);
+			}
+		}
+		return res;	
+    }
+};
+
+
+// longest increasing subsequence copied 
+vector<int> find_lis(vector<int> A)
+{
+  vector<int> m;
+  vector<int> p(A.size());
+ 
+  int i, begin, end, mid;
+  
+  m.push_back(0);
+ 
+  for (i = 1; i < A.size(); i++){
+    if (A[m.back()] <= A[i]){
+      p[i] = m.back();   // the order here is important
+      m.push_back(i);
+      continue;
+    }
+     
+    for (begin = 0, end = m.size() -1; begin < end; ){
+      mid = (begin + end) / 2;
+      if (A[m[mid]] <= A[i])
+        begin = mid + 1;
+      else
+        end = mid;
+    }
+     
+    if (A[i] < A[m[begin]]){
+      m[begin] = i;
+      if (begin > 0) p[i] = m[begin - 1];
+    }
+  }
+ 
+  vector<int> result;
+  int pos ;
+ 
+  pos = m.back();
+  for (i = m.size(); i > 0; i--){
+    result.push_back(A[pos]);
+    pos =  p[pos];
+  }
+   
+  reverse(result.begin(), result.end());
+  return result;
+}
+
+		
+//  LRU
+#ifndef myLRU
+#define myLRU
+#include <iostream>
+#include <map>
+using namespace std;
+
+template<class K, class V>
+class LRU {
+	struct Node {
+		K key;
+		V value;
+		Node* left;
+		Node* right;
+		Node() {left=right=NULL;}
+	};
+	public:
+	LRU(unsigned c) {cap = c; curSize=0; 
+		head=new Node; tail =new Node;
+		head->right = tail; tail->left=head;}
+	~LRU() {
+		Node *t=head;
+		while(t) {
+			Node* nextT=t->right;
+			delete t;
+			t=nextT;
+		}
+	}
+	V find(K key, bool &found) {
+		if(index.find(key) != index.end()) {
+			Node* n = index[key];
+			remove(n);
+			prepend(n);
+			found=true;
+			return n->value;
+		} else {
+			found = false;
+			return *(new V);
+		}
+	}
+	void insert(K key, V value) {
+		if(index.find(key) != index.end()) { // update the value
+			Node *n = index[key];
+			remove(n);
+			prepend(n);
+			n->value = value;
+			index[key] = n;
+		} else if(curSize < cap) {
+			Node *n = new Node;
+			n->key = key; n->value = value;
+			prepend(n);
+			index[key] = n;
+			curSize++;
+		} else {
+			Node *change = tail->left;
+			remove(change);
+			index.erase(change->key);
+			change->key = key;
+			change->value = value;
+			prepend(change);
+			index[key]=change;
+		}
+	}
+	void reportStat() {
+		cout<<"current size="<<curSize<<" of capacity "<<cap<<endl;
+	}
+	private:
+	void prepend(Node* n) {
+		n->left=head;
+		n->right=head->right;
+		head->right=n;
+		n->right->left=n;
+	}
+	void remove(Node* n) {
+		n->left->right=n->right;
+		n->right->left=n->left;
+		n->left=NULL; n->right=NULL;
+	}
+	unsigned curSize;
+	unsigned cap;
+	Node* head;
+	Node* tail;
+	map<K, Node*> index;
+};
+#endif
+
+
+#ifndef MYHASH
+#define MYHASH
+#include <iostream>
+template <class K, class O>
+class Hash {
+private:
+	struct Node {
+		K key;
+		O obj;
+	};
+	int sz;
+	unsigned hashFunc(K key);
+	static const int PRIME=7919;
+	O nullObj;
+	Node** nodes;
+public:
+	Hash() {nodes = new Node*[PRIME]; memset(nodes, 0, PRIME); sz=PRIME;} // choose a large prime
+	unsigned size();
+	O find(K key);
+	bool put(K key, O obj);
+	~Hash() {
+		for(int i=0; i<PRIME; i++)
+			if(nodes[i])
+				delete nodes[i];
+		delete nodes;
+	}
+	O end() {return nullObj;}
+};
+template<class K, class O>
+unsigned Hash<K,O>::hashFunc(K key) {
+	unsigned kSize=sizeof(K);
+	char* ptr=(char*)&key;
+	unsigned h=0;
+	for(int i=0; i<kSize; i++) {
+		h=h*7 + *(ptr+i);
+	}
+	h=h/sz;
+	return h;
+}
+template<class K, class O>
+unsigned Hash<K,O>::size() {
+	return sz;
+}
+template<class K, class O>
+O Hash<K,O>::find(K key) {
+	unsigned pos=hashFunc(key);
+	if(nodes[pos] == NULL)
+		return nullObj;
+	return nodes[pos]->obj;
+}
+template<class K, class O>
+bool Hash<K,O>::put(K k, O o) {
+	unsigned pos=hashFunc(k);
+	Node* n = new Node;
+	n->key=k; n->obj=o;
+	if(nodes[pos] == NULL) {
+		nodes[pos] = n;
+		std::cout<<"inserted at position "<<pos<<endl;
+		return true;
+	} else { // linear probing
+		return false;
+	}
+}
+
+#endif			
 
