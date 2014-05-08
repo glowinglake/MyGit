@@ -1,5 +1,6 @@
-// scratch of some coding problem solutions(C++)
-// search and find anything interesting
+// scratch of some coding problem solutions(C++) in bundle
+// no separate files for each problem, just scratch
+// search for anything interesting
 
 class Solution {
 public:
