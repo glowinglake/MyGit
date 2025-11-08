@@ -12,7 +12,7 @@ class Board:
         self.v_table = [[0.0 for _ in range(len(board[0]))] for _ in range(len(board))]
         self.v_table[len(board) - 1][len(board[0]) - 1] = 1.0
         self.discount_factor = 0.9
-        self.lr = 0.25
+        self.lr = 0.1
         self.epsilon = 0.1
         self.num_simulations = 50000
 
@@ -21,7 +21,7 @@ class Board:
             if i % 100 == 0:
                 print(f"v_table before {i} simulations:\n")
                 self.print_v_table(self.v_table)
-            self.td_simulation(3)
+            self.td_simulation(1)
             
 
     def get_random_valid_start_state(self):
@@ -34,30 +34,51 @@ class Board:
             if self.board[row][col] == 0 and (row, col) != (goal_row, goal_col):
                 return (row, col)
 
-    def td_simulation(self, lambda_value):
-        # simulate lambda_value steps from a random start state.
-        # when lambda_value is 0, it is the same as TD(0) (aka, a single step sample)
+    def td_simulation(self, total_steps):
+        # simulate total_steps steps from a random start state.
         start_state = self.get_random_valid_start_state()
         state = start_state
         step = 0
         cumulative_reward = 0
-        while step <= lambda_value and state != (len(self.board) - 1, len(self.board[0]) - 1):
+        while step <= total_steps and state != (len(self.board) - 1, len(self.board[0]) - 1):
             action, reward, next_state = self.sample_action(state, self.v_table, self.board)
             cumulative_reward += reward * (self.discount_factor**step)
             step += 1
             state = next_state
 
-        # Bootstrapping: only if we have not reached terminal, and discount by actual steps taken
-        reached_terminal = (state == (len(self.board) - 1, len(self.board[0]) - 1))
-        if not reached_terminal:
-            cumulative_reward += (self.discount_factor**step) * self.v_table[state[0]][state[1]]
+        cumulative_reward += (self.discount_factor**step) * self.v_table[state[0]][state[1]]
         
-        # reached terminal state or completed lambda_value steps, now update the v_table based on bellman equation
+        # reached terminal state or completed total_steps steps, now update the v_table based on bellman equation
         self.v_table[start_state[0]][start_state[1]] += self.lr * (
             cumulative_reward - self.v_table[start_state[0]][start_state[1]]
         )
         
-    
+    def td_lambda_simulation_with_eligibility_trace(self, lambda_value = 0.9):
+        # simulate steps until the terminal state is reached from a random start state.
+        # track the eligibility trace and update the v_table based on the eligibility trace
+        # during each step. 
+        #eligibility trace is a dict of state to their eligibility values. 
+        eligibility_trace = {}
+        start_state = self.get_random_valid_start_state()
+        state = start_state
+        step = 0
+        cumulative_reward = 0
+        while state != (len(self.board) - 1, len(self.board[0]) - 1):
+            action, reward, next_state = self.sample_action(state, self.v_table, self.board)
+            # Increment eligibility trace of current state (before computing TD error)
+            eligibility_trace[state] = eligibility_trace.get(state, 0.0) + 1.0
+            
+            td_error = reward + self.discount_factor*self.v_table[next_state[0]][next_state[1]] - self.v_table[state[0]][state[1]]
+            # update all states in the eligibility trace based on the td_error
+            for k, v in eligibility_trace.items():
+                self.v_table[k[0]][k[1]] += self.lr * td_error * v
+            
+            # Decay eligibility traces after updating values
+            eligibility_trace.update((k, v*lambda_value*self.discount_factor) for k, v in eligibility_trace.items())
+            
+            state = next_state
+
+
     def monte_carlo_simulation(self):
         # simulate a full episode from a random start state
         state = self.get_random_valid_start_state()
@@ -121,7 +142,7 @@ class Board:
         elif action_index == 3:
             next_state = (state[0], state[1] + 1)
         if next_state[0] == len(board) - 1 and next_state[1] == len(board[0]) - 1:
-            reward = 1.0
+            reward = 0.0
         else:
             reward = 0.0
         next_state = self.teleport(next_state)
