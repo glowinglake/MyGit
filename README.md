@@ -15,4 +15,5 @@ This repository contains a simple Markov Decision Process (MDP) example located 
 ```bash
 cd rl
 python3 mdp_board_pathfinding.py
+python3 mdp_board_pathfinding_q_function.py
 ```
