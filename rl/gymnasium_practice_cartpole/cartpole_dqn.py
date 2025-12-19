@@ -35,8 +35,15 @@ class DQNAgent:
         # Epsilon-greedy exploration with exploration decay
         self.epsilon = 1.0
         
-        # Q-Network
+        # Q-Network (updated every step)
         self.q_network = QNetwork(state_dim, action_dim)
+        
+        # Target Network (frozen copy, provides stable targets)
+        self.target_network = QNetwork(state_dim, action_dim)
+        self.target_network.load_state_dict(self.q_network.state_dict())
+        self.target_update_freq = 100  # Update target every N steps
+        self.step_count = 0
+        
         self.optimizer = torch.optim.Adam(self.q_network.parameters(), lr=1e-3)
     
     def select_action(self, state):
@@ -66,7 +73,7 @@ def main():
     print(f"State dim: {state_dim}, Action dim: {action_dim}")
     print()
     
-    for episode in range(1000):
+    for episode in range(2000):
         state, _ = env.reset()
         
         for step in range(500):
@@ -84,7 +91,8 @@ def main():
             else:
                 next_state_tensor = torch.tensor(next_state, dtype=torch.float32).unsqueeze(0)
                 with torch.no_grad():
-                    preds = agent.q_network(next_state_tensor)
+                    # Use TARGET network for stable Bellman target
+                    preds = agent.target_network(next_state_tensor)
                     max_next_q = max(preds[0, 0], preds[0, 1])
                 qvalue = reward + agent.gamma * max_next_q
             
@@ -94,6 +102,11 @@ def main():
             loss.backward()
             agent.optimizer.step()
             
+            # Update target network periodically
+            agent.step_count += 1
+            if agent.step_count % agent.target_update_freq == 0:
+                agent.target_network.load_state_dict(agent.q_network.state_dict())
+            
             state = next_state
             
             if terminated or truncated:
@@ -102,7 +115,7 @@ def main():
         if episode % 50 == 0:
             print(f"Episode {episode:4d} | Steps: {step:6.1f} | "
                   f"Epsilon: {agent.epsilon:.3f}")
-        agent.epsilon = max(0.1, agent.epsilon * 0.995)
+        agent.epsilon = max(0.01, agent.epsilon * 0.999)
     
     env.close()
     print("\nTraining complete!")
