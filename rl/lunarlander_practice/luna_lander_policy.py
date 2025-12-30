@@ -13,7 +13,6 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import random
 import pygame
 from collections import deque
 
@@ -38,42 +37,53 @@ class PolicyNetwork(nn.Module):
 class Agent:
     def __init__(self, state_dim, action_dim):
         self.action_dim = action_dim
-        self.gamma = 0.99  # Discount factor
-        
-        # Epsilon-greedy exploration with exploration decay
-        self.epsilon = 1.0
-        
-        # Q-Network (updated every step)
         self.policy_network = PolicyNetwork(state_dim, action_dim)
-        
-        # Target Network (frozen copy, provides stable targets)
-        self.target_network = PolicyNetwork(state_dim, action_dim)
-        self.target_network.load_state_dict(self.policy_network.state_dict())
-        self.target_update_freq = 500  # Update target every N steps
-        self.step_count = 0
-        
-        self.optimizer = torch.optim.Adam(self.policy_network.parameters(), lr=1e-4)
-
-        self.buffer = deque(maxlen=100000)
-
-    def store_step(self, state, action, reward, next_state, terminated, truncated):
-        self.buffer.append((state, action, reward, next_state, terminated, truncated))
-
-    def sample_batch(self, batch_size):
-        batch = random.sample(self.buffer, batch_size)
-        return batch
+        self.optimizer = torch.optim.Adam(self.policy_network.parameters(), lr=5e-4)
+        self.discount_factor = 0.99
     
     def select_action(self, state):
-        """Sample from the policy distribution"""
-        with torch.no_grad():
-            state_tensor = torch.tensor(state, dtype=torch.float32).unsqueeze(0)
-            probs = self.policy_network(state_tensor)  # [1, 4] probability tensor
-            dist = torch.distributions.Categorical(probs)  # Create distribution
-            return dist.sample().item()
+        """Sample from the policy distribution, return action and log probability"""
+        # NOTE: No torch.no_grad() here! We need gradients for log_prob
+        state_tensor = torch.tensor(state, dtype=torch.float32).unsqueeze(0)
+        probs = self.policy_network(state_tensor)  # [1, 4] probability tensor
+        dist = torch.distributions.Categorical(probs)  # Create distribution
+        action = dist.sample()
+        log_prob = dist.log_prob(action)  # This is what REINFORCE needs!
+        return action.item(), log_prob
 
+    def finish_episode(self, episode_log_probs, episode_rewards):
+        """Finish episode, calculate discounted return for each steps, and update policy network.
+        Returns the loss value for logging."""
+        discounted_returns = []
+        r = 0
+        for reward in episode_rewards[::-1]:
+            r = reward + self.discount_factor * r
+            discounted_returns.insert(0, r)
+        
+        discounted_returns = torch.tensor(discounted_returns)
+        
+        # Normalize returns (reduces variance, helps training stability)
+        if len(discounted_returns) > 1:
+            discounted_returns = (discounted_returns - discounted_returns.mean()) / (discounted_returns.std() + 1e-8)
+        
+        policy_loss = []
+        for log_prob, R in zip(episode_log_probs, discounted_returns):
+            policy_loss.append(-log_prob * R)    
+
+        if len(policy_loss) == 0:
+            print("No samples in the episode, skip training")
+            return 0.0
+        
+        self.optimizer.zero_grad()
+        loss = torch.stack(policy_loss).sum()  # stack works with 0-d tensors
+        loss.backward()
+        torch.nn.utils.clip_grad_norm_(self.policy_network.parameters(), max_norm=0.5)
+        self.optimizer.step()
+        
+        return loss.item()
 
 def run_simulation(agent, num_episodes=1, max_steps=1000):
-    """Run simulation episodes with rendering using greedy policy."""
+    """Run simulation episodes with rendering using policy network."""
     sim_env = gym.make("LunarLander-v3", render_mode="human")
     
     for ep in range(num_episodes):
@@ -84,7 +94,7 @@ def run_simulation(agent, num_episodes=1, max_steps=1000):
             sim_env.render()
             with torch.no_grad():
                 state_tensor = torch.tensor(state, dtype=torch.float32).unsqueeze(0)
-                action = agent.q_network(state_tensor).argmax().item()
+                action, prob = agent.select_action(state)
             state, reward, terminated, truncated, _ = sim_env.step(action)
             total_reward += reward
             if terminated or truncated:
@@ -107,75 +117,60 @@ def main():
     agent = Agent(state_dim, action_dim)
     
     print("=" * 60)
-    print("DQN for LunarLander-v3")
+    print("REINFORCE Policy Gradient for LunarLander-v3")
     print("=" * 60)
     print(f"State dim: {state_dim}, Action dim: {action_dim}")
     print()
     
-    for episode in range(1000):
+    # Tracking metrics
+    recent_rewards = deque(maxlen=100)  # Rolling window for average
+    best_avg_reward = -float('inf')
+    
+    for episode in range(2000):
         state, _ = env.reset()
-        total_reward = 0
         
+        episode_log_probs = []
+        episode_rewards = []
+        
+        # Collect full episode
         for step in range(1000):
-            # Select action (epsilon-greedy)
-            action = agent.select_action(state)
-
-            # Take action in environment
+            action, log_prob = agent.select_action(state)
             next_state, reward, terminated, truncated, _ = env.step(action)
-            agent.store_step(state, action, reward, next_state, terminated, truncated)
-            total_reward += reward
 
-            # ===== BATCHED TRAINING =====
-            if len(agent.buffer) > 64:
-                batch = agent.sample_batch(64)
-                
-                # Step 1: Convert list of tuples → tensors (vectorized)
-                states = torch.from_numpy(np.array([x[0] for x in batch])).float()       # [64, 8]
-                actions = torch.tensor([x[1] for x in batch], dtype=torch.long)          # [64]
-                rewards = torch.tensor([x[2] for x in batch], dtype=torch.float32)       # [64]
-                next_states = torch.from_numpy(np.array([x[3] for x in batch])).float()  # [64, 8]
-                dones = torch.tensor([x[4] for x in batch], dtype=torch.bool)            # [64]
-                
-                # Step 2: Compute targets (all 64 at once)
-                with torch.no_grad():
-                    # target_network(next_states) → [64, 4] (Q-values for all actions)
-                    # .max(dim=1).values → [64] (best Q-value for each sample)
-                    next_q = agent.target_network(next_states).max(dim=1).values
-                    # Bellman: target = r + γ * max_Q(s') * (not done)
-                    targets = rewards + agent.gamma * next_q * (~dones)
-                
-                # Step 3: Compute current Q-values for taken actions
-                # q_network(states) → [64, 4]
-                # .gather(1, actions.unsqueeze(1)) → select Q[action] for each sample → [64, 1]
-                # .squeeze(1) → [64]
-                current_q = agent.q_network(states).gather(1, actions.unsqueeze(1)).squeeze(1)
-                
-                # Step 4: Single gradient update for entire batch
-                agent.optimizer.zero_grad()
-                loss = F.mse_loss(current_q, targets)
-                loss.backward()
-                torch.nn.utils.clip_grad_norm_(agent.q_network.parameters(), 1.0)
-                agent.optimizer.step()
-            
-            # Update target network periodically
-            agent.step_count += 1
-            if agent.step_count % agent.target_update_freq == 0:
-                agent.target_network.load_state_dict(agent.q_network.state_dict())
-            
-            state = next_state
-            
+            episode_log_probs.append(log_prob)
+            episode_rewards.append(reward)
+
             if terminated or truncated:
                 break
 
-        if episode % 50 == 0:
-            print(f"Episode {episode:4d} | Reward: {total_reward:7.1f} | Steps: {step:4d} | "
-                  f"Epsilon: {agent.epsilon:.3f} | Buffer: {len(agent.buffer)}")
-                
+            state = next_state
         
-        agent.epsilon = max(0.04, agent.epsilon * 0.995)
-    
+        # Train on episode
+        loss = agent.finish_episode(episode_log_probs, episode_rewards)
+        
+        # Track metrics
+        total_reward = sum(episode_rewards)
+        recent_rewards.append(total_reward)
+        avg_reward = np.mean(recent_rewards)
+        
+        # Log progress
+        if episode % 20 == 0:
+            status = "✓ SOLVED!" if total_reward >= 200 else ""
+            print(f"Episode {episode:4d} | "
+                  f"Reward: {total_reward:7.1f} | "
+                  f"Avg(100): {avg_reward:7.1f} | "
+                  f"Steps: {step+1:4d} | "
+                  f"Loss: {loss:8.2f} {status}")
+        
+        # Track best performance
+        if avg_reward > best_avg_reward and len(recent_rewards) == 100:
+            best_avg_reward = avg_reward
+            if avg_reward >= 200:
+                print(f"\n🎉 Solved! Average reward {avg_reward:.1f} >= 200 over 100 episodes!")
+                break
+
     env.close()
-    print("\nTraining complete!")
+    print(f"\nTraining complete! Best avg reward: {best_avg_reward:.1f}")
     
     # ========== FINAL VISUALIZATION ==========
     print("\n" + "=" * 60)
