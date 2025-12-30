@@ -5,6 +5,7 @@ Pure value-based learning using the Bellman equation:
 """
 
 import gymnasium as gym
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -45,6 +46,15 @@ class DQNAgent:
         self.step_count = 0
         
         self.optimizer = torch.optim.Adam(self.q_network.parameters(), lr=1e-3)
+
+        self.buffer = deque(maxlen=100000)
+
+    def store_step(self, state, action, reward, next_state, terminated, truncated):
+        self.buffer.append((state, action, reward, next_state, terminated, truncated))
+
+    def sample_batch(self, batch_size):
+        batch = random.sample(self.buffer, batch_size)
+        return batch
     
     def select_action(self, state):
         """Epsilon-greedy action selection"""
@@ -73,34 +83,52 @@ def main():
     print(f"State dim: {state_dim}, Action dim: {action_dim}")
     print()
     
-    for episode in range(2000):
+    for episode in range(500):
         state, _ = env.reset()
         
         for step in range(500):
             # Select action (epsilon-greedy)
             action = agent.select_action(state)
-            state_tensor = torch.tensor(state, dtype=torch.float32).unsqueeze(0)
 
             # Take action in environment
             next_state, reward, terminated, truncated, _ = env.step(action)
-            
-            if terminated:
-                qvalue = torch.tensor(0.0)
-            elif truncated:
-                qvalue = torch.tensor(1.0)
-            else:
-                next_state_tensor = torch.tensor(next_state, dtype=torch.float32).unsqueeze(0)
+            agent.store_step(state, action, reward, next_state, terminated, truncated)          
+
+            # ===== BATCHED TRAINING =====
+            if len(agent.buffer) > 64:
+                batch = agent.sample_batch(64)
+                
+                # Step 1: Convert list of tuples → tensors (vectorized)
+                states = torch.from_numpy(np.array([x[0] for x in batch])).float()       # [64, 4]
+                actions = torch.tensor([x[1] for x in batch], dtype=torch.long)          # [64]
+                rewards = torch.tensor([x[2] for x in batch], dtype=torch.float32)       # [64]
+                
+                # optional: penalize the agent for moving too far from the center
+                rewards += torch.tensor([-0.5 if abs(x[0][0])>2.0 else 0.0 for x in batch], dtype=torch.float32)
+                
+                next_states = torch.from_numpy(np.array([x[3] for x in batch])).float()  # [64, 4]
+                dones = torch.tensor([x[4] for x in batch], dtype=torch.bool)            # [64]
+                
+                # Step 2: Compute targets (all 64 at once)
                 with torch.no_grad():
-                    # Use TARGET network for stable Bellman target
-                    preds = agent.target_network(next_state_tensor)
-                    max_next_q = max(preds[0, 0], preds[0, 1])
-                qvalue = reward + agent.gamma * max_next_q
-            
-            # Train using Bellman equation
-            agent.optimizer.zero_grad()
-            loss = torch.nn.MSELoss()(agent.q_network(state_tensor)[0, action], qvalue)
-            loss.backward()
-            agent.optimizer.step()
+                    # target_network(next_states) → [64, 2] (Q-values for both actions)
+                    # .max(dim=1).values → [64] (best Q-value for each sample)
+                    next_q = agent.target_network(next_states).max(dim=1).values
+                    # Bellman: target = r + γ * max_Q(s') * (not done)
+                    targets = rewards + agent.gamma * next_q * (~dones)
+                
+                # Step 3: Compute current Q-values for taken actions
+                # q_network(states) → [64, 2]
+                # .gather(1, actions.unsqueeze(1)) → select Q[action] for each sample → [64, 1]
+                # .squeeze(1) → [64]
+                current_q = agent.q_network(states).gather(1, actions.unsqueeze(1)).squeeze(1)
+                
+                # Step 4: Single gradient update for entire batch
+                agent.optimizer.zero_grad()
+                loss = F.mse_loss(current_q, targets)
+                loss.backward()
+                torch.nn.utils.clip_grad_norm_(agent.q_network.parameters(), 1.0)
+                agent.optimizer.step()
             
             # Update target network periodically
             agent.step_count += 1
@@ -114,8 +142,8 @@ def main():
 
         if episode % 50 == 0:
             print(f"Episode {episode:4d} | Steps: {step:6.1f} | "
-                  f"Epsilon: {agent.epsilon:.3f}")
-        agent.epsilon = max(0.01, agent.epsilon * 0.999)
+                  f"Epsilon: {agent.epsilon:.3f} | Buffer size: {len(agent.buffer)}")
+        agent.epsilon = max(0.01, agent.epsilon * 0.99)
     
     env.close()
     print("\nTraining complete!")
