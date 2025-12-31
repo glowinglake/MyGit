@@ -17,6 +17,8 @@ import torch.nn.functional as F
 import random
 import pygame
 from collections import deque
+from gymnasium.wrappers import RecordVideo
+
 
 
 class QNetwork(nn.Module):
@@ -24,28 +26,14 @@ class QNetwork(nn.Module):
     
     def __init__(self, state_dim, action_dim):
         super(QNetwork, self).__init__()
-        self.fc1 = nn.Linear(state_dim, 2048)
-        self.fc2 = nn.Linear(2048, 2048)
-        self.fc3 = nn.Linear(2048, 1024)
-        self.fc4 = nn.Linear(1024, 512)
-        self.fc5 = nn.Linear(512, 256)
-        self.fc6 = nn.Linear(256, 128)
-        self.fc7 = nn.Linear(128, 64)
-        self.fc8 = nn.Linear(64, 32)
-        self.fc9 = nn.Linear(32, 16)
-        self.fc10 = nn.Linear(16, action_dim)  # Output: Q-value for each action
-    
+        self.fc1 = nn.Linear(state_dim, 128)
+        self.fc2 = nn.Linear(128, 128)
+        self.fc3 = nn.Linear(128, action_dim)  # Output: Q-value for each action
+
     def forward(self, state):
         x = F.relu(self.fc1(state))
         x = F.relu(self.fc2(x))
-        x = F.relu(self.fc3(x))
-        x = F.relu(self.fc4(x))
-        x = F.relu(self.fc5(x))
-        x = F.relu(self.fc6(x))
-        x = F.relu(self.fc7(x))
-        x = F.relu(self.fc8(x))
-        x = F.relu(self.fc9(x))
-        return self.fc10(x)  # Returns [Q(s,0), Q(s,1), Q(s,2), Q(s,3)] for LunarLander
+        return self.fc3(x)  # Returns [Q(s,0), Q(s,1), Q(s,2), Q(s,3)] for LunarLander
 
 
 class DQNAgent:
@@ -91,7 +79,11 @@ class DQNAgent:
 
 def run_simulation(agent, num_episodes=1, max_steps=1000):
     """Run simulation episodes with rendering using greedy policy."""
-    sim_env = gym.make("LunarLander-v3", render_mode="human")
+    sim_env = gym.make("LunarLander-v3", render_mode="rgb_array")
+
+    # record simulation as video
+    sim_env = RecordVideo(sim_env, video_folder="videos", name_prefix="lunarlander",
+                      episode_trigger=lambda ep: ep < 5)  # record first 2 episodes
     
     for ep in range(num_episodes):
         state, _ = sim_env.reset()
