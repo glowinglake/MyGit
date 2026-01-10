@@ -1,0 +1,487 @@
+syntax = "proto3";
+
+package hdfs.proto;
+
+import "hdfs.proto";
+
+// ============ NameNode Client Protocol ============
+
+service ClientNamenodeProtocol {
+    // File operations
+    rpc Create(CreateRequestProto) returns (CreateResponseProto);
+    rpc Append(AppendRequestProto) returns (AppendResponseProto);
+    rpc Complete(CompleteRequestProto) returns (CompleteResponseProto);
+    rpc AddBlock(AddBlockRequestProto) returns (AddBlockResponseProto);
+    rpc AbandonBlock(AbandonBlockRequestProto) returns (AbandonBlockResponseProto);
+    
+    // Block locations
+    rpc GetBlockLocations(GetBlockLocationsRequestProto) returns (GetBlockLocationsResponseProto);
+    
+    // File/directory operations
+    rpc GetFileInfo(GetFileInfoRequestProto) returns (GetFileInfoResponseProto);
+    rpc GetListing(GetListingRequestProto) returns (GetListingResponseProto);
+    rpc Mkdirs(MkdirsRequestProto) returns (MkdirsResponseProto);
+    rpc Rename(RenameRequestProto) returns (RenameResponseProto);
+    rpc Rename2(Rename2RequestProto) returns (Rename2ResponseProto);
+    rpc Delete(DeleteRequestProto) returns (DeleteResponseProto);
+    rpc Truncate(TruncateRequestProto) returns (TruncateResponseProto);
+    
+    // Permissions
+    rpc SetPermission(SetPermissionRequestProto) returns (SetPermissionResponseProto);
+    rpc SetOwner(SetOwnerRequestProto) returns (SetOwnerResponseProto);
+    rpc SetTimes(SetTimesRequestProto) returns (SetTimesResponseProto);
+    
+    // Replication
+    rpc SetReplication(SetReplicationRequestProto) returns (SetReplicationResponseProto);
+    
+    // Status
+    rpc GetFsStats(GetFsStatsRequestProto) returns (GetFsStatsResponseProto);
+    rpc GetContentSummary(GetContentSummaryRequestProto) returns (GetContentSummaryResponseProto);
+    
+    // Snapshots
+    rpc AllowSnapshot(AllowSnapshotRequestProto) returns (AllowSnapshotResponseProto);
+    rpc DisallowSnapshot(DisallowSnapshotRequestProto) returns (DisallowSnapshotResponseProto);
+    rpc CreateSnapshot(CreateSnapshotRequestProto) returns (CreateSnapshotResponseProto);
+    rpc DeleteSnapshot(DeleteSnapshotRequestProto) returns (DeleteSnapshotResponseProto);
+    rpc RenameSnapshot(RenameSnapshotRequestProto) returns (RenameSnapshotResponseProto);
+    rpc GetSnapshottableDirListing(GetSnapshottableDirListingRequestProto) returns (GetSnapshottableDirListingResponseProto);
+    
+    // Quota
+    rpc SetQuota(SetQuotaRequestProto) returns (SetQuotaResponseProto);
+    
+    // Admin
+    rpc GetDatanodeReport(GetDatanodeReportRequestProto) returns (GetDatanodeReportResponseProto);
+    rpc RefreshNodes(RefreshNodesRequestProto) returns (RefreshNodesResponseProto);
+    rpc SetSafeMode(SetSafeModeRequestProto) returns (SetSafeModeResponseProto);
+    
+    // Recovery
+    rpc RecoverLease(RecoverLeaseRequestProto) returns (RecoverLeaseResponseProto);
+    
+    // HA
+    rpc GetHAServiceState(GetHAServiceStateRequestProto) returns (GetHAServiceStateResponseProto);
+}
+
+// ============ Request/Response Messages ============
+
+message CreateRequestProto {
+    string src = 1;
+    uint32 masked_permission = 2;
+    string client_name = 3;
+    bool create_parent = 4;
+    uint32 replication = 5;
+    uint64 block_size = 6;
+    bool overwrite = 7;
+    repeated string crypto_protocol_version = 8;
+    string ec_policy_name = 9;
+    string storage_policy = 10;
+}
+
+message CreateResponseProto {
+    FileStatusProto fs = 1;
+}
+
+message AppendRequestProto {
+    string src = 1;
+    string client_name = 2;
+    bool new_block = 3;
+}
+
+message AppendResponseProto {
+    LocatedBlockProto block = 1;
+    FileStatusProto stat = 2;
+}
+
+message CompleteRequestProto {
+    string src = 1;
+    string client_name = 2;
+    BlockProto last = 3;
+    uint64 file_id = 4;
+}
+
+message CompleteResponseProto {
+    bool result = 1;
+}
+
+message AddBlockRequestProto {
+    string src = 1;
+    string client_name = 2;
+    BlockProto previous = 3;
+    repeated DatanodeInfoProto excluded_nodes = 4;
+    uint64 file_id = 5;
+    repeated string favored_nodes = 6;
+    repeated uint32 add_block_flags = 7;
+}
+
+message AddBlockResponseProto {
+    LocatedBlockProto block = 1;
+}
+
+message AbandonBlockRequestProto {
+    BlockProto block = 1;
+    string src = 2;
+    string holder = 3;
+    uint64 file_id = 4;
+}
+
+message AbandonBlockResponseProto {
+}
+
+message GetBlockLocationsRequestProto {
+    string src = 1;
+    uint64 offset = 2;
+    uint64 length = 3;
+}
+
+message GetBlockLocationsResponseProto {
+    LocatedBlocksProto locations = 1;
+}
+
+message GetFileInfoRequestProto {
+    string src = 1;
+}
+
+message GetFileInfoResponseProto {
+    FileStatusProto fs = 1;
+}
+
+message GetListingRequestProto {
+    string src = 1;
+    bytes start_after = 2;
+    bool need_location = 3;
+}
+
+message GetListingResponseProto {
+    DirectoryListingProto dir_list = 1;
+}
+
+message DirectoryListingProto {
+    repeated FileStatusProto partial_listing = 1;
+    uint32 remaining_entries = 2;
+}
+
+message MkdirsRequestProto {
+    string src = 1;
+    uint32 masked_permission = 2;
+    bool create_parent = 3;
+    uint32 unmasked_permission = 4;
+}
+
+message MkdirsResponseProto {
+    bool result = 1;
+}
+
+message RenameRequestProto {
+    string src = 1;
+    string dst = 2;
+}
+
+message RenameResponseProto {
+    bool result = 1;
+}
+
+message Rename2RequestProto {
+    string src = 1;
+    string dst = 2;
+    bool overwrite_dest = 3;
+    bool move_to_trash = 4;
+}
+
+message Rename2ResponseProto {
+}
+
+message DeleteRequestProto {
+    string src = 1;
+    bool recursive = 2;
+}
+
+message DeleteResponseProto {
+    bool result = 1;
+}
+
+message TruncateRequestProto {
+    string src = 1;
+    uint64 new_length = 2;
+    string client_name = 3;
+}
+
+message TruncateResponseProto {
+    bool result = 1;
+}
+
+message SetPermissionRequestProto {
+    string src = 1;
+    uint32 permission = 2;
+}
+
+message SetPermissionResponseProto {
+}
+
+message SetOwnerRequestProto {
+    string src = 1;
+    string username = 2;
+    string groupname = 3;
+}
+
+message SetOwnerResponseProto {
+}
+
+message SetTimesRequestProto {
+    string src = 1;
+    uint64 mtime = 2;
+    uint64 atime = 3;
+}
+
+message SetTimesResponseProto {
+}
+
+message SetReplicationRequestProto {
+    string src = 1;
+    uint32 replication = 2;
+}
+
+message SetReplicationResponseProto {
+    bool result = 1;
+}
+
+message GetFsStatsRequestProto {
+}
+
+message GetFsStatsResponseProto {
+    uint64 capacity = 1;
+    uint64 used = 2;
+    uint64 remaining = 3;
+    uint64 under_replicated = 4;
+    uint64 corrupt_blocks = 5;
+    uint64 missing_blocks = 6;
+    uint64 missing_repl_one_blocks = 7;
+    uint64 blocks_in_future = 8;
+    uint64 pending_deletion_blocks = 9;
+}
+
+message GetContentSummaryRequestProto {
+    string path = 1;
+}
+
+message GetContentSummaryResponseProto {
+    ContentSummaryProto summary = 1;
+}
+
+message AllowSnapshotRequestProto {
+    string snapshot_root = 1;
+}
+
+message AllowSnapshotResponseProto {
+}
+
+message DisallowSnapshotRequestProto {
+    string snapshot_root = 1;
+}
+
+message DisallowSnapshotResponseProto {
+}
+
+message CreateSnapshotRequestProto {
+    string snapshot_root = 1;
+    string snapshot_name = 2;
+}
+
+message CreateSnapshotResponseProto {
+    string snapshot_path = 1;
+}
+
+message DeleteSnapshotRequestProto {
+    string snapshot_root = 1;
+    string snapshot_name = 2;
+}
+
+message DeleteSnapshotResponseProto {
+}
+
+message RenameSnapshotRequestProto {
+    string snapshot_root = 1;
+    string snapshot_old_name = 2;
+    string snapshot_new_name = 3;
+}
+
+message RenameSnapshotResponseProto {
+}
+
+message GetSnapshottableDirListingRequestProto {
+}
+
+message GetSnapshottableDirListingResponseProto {
+    SnapshottableDirListingProto snapshottable_dir_list = 1;
+}
+
+message SnapshottableDirListingProto {
+    repeated SnapshottableDirectoryStatusProto snapshottable_dir_listing = 1;
+}
+
+message SnapshottableDirectoryStatusProto {
+    FileStatusProto dir_status = 1;
+    uint32 snapshot_quota = 2;
+    uint32 snapshot_number = 3;
+    bytes parent_full_path = 4;
+}
+
+message SetQuotaRequestProto {
+    string path = 1;
+    uint64 namespace_quota = 2;
+    uint64 storagespace_quota = 3;
+    string storage_type = 4;
+}
+
+message SetQuotaResponseProto {
+}
+
+message GetDatanodeReportRequestProto {
+    enum DatanodeReportType {
+        ALL = 0;
+        LIVE = 1;
+        DEAD = 2;
+        DECOMMISSIONING = 3;
+        ENTERING_MAINTENANCE = 4;
+        IN_MAINTENANCE = 5;
+    }
+    DatanodeReportType type = 1;
+}
+
+message GetDatanodeReportResponseProto {
+    repeated DatanodeInfoProto di = 1;
+}
+
+message RefreshNodesRequestProto {
+}
+
+message RefreshNodesResponseProto {
+}
+
+message SetSafeModeRequestProto {
+    enum SafeModeAction {
+        SAFEMODE_LEAVE = 0;
+        SAFEMODE_ENTER = 1;
+        SAFEMODE_GET = 2;
+        SAFEMODE_FORCE_EXIT = 3;
+    }
+    SafeModeAction action = 1;
+    bool checked = 2;
+}
+
+message SetSafeModeResponseProto {
+    bool result = 1;
+}
+
+message RecoverLeaseRequestProto {
+    string src = 1;
+    string client_name = 2;
+}
+
+message RecoverLeaseResponseProto {
+    bool result = 1;
+}
+
+message GetHAServiceStateRequestProto {
+}
+
+message GetHAServiceStateResponseProto {
+    enum HAServiceState {
+        ACTIVE = 0;
+        STANDBY = 1;
+        OBSERVER = 2;
+        INITIALIZING = 3;
+        STOPPING = 4;
+    }
+    HAServiceState state = 1;
+}
+
+// ============ NameNode to DataNode Protocol ============
+
+service DatanodeProtocol {
+    rpc RegisterDatanode(RegisterDatanodeRequestProto) returns (RegisterDatanodeResponseProto);
+    rpc SendHeartbeat(HeartbeatRequestProto) returns (HeartbeatResponseProto);
+    rpc BlockReport(BlockReportRequestProto) returns (BlockReportResponseProto);
+    rpc BlockReceivedAndDeleted(BlockReceivedAndDeletedRequestProto) returns (BlockReceivedAndDeletedResponseProto);
+    rpc ErrorReport(ErrorReportRequestProto) returns (ErrorReportResponseProto);
+    rpc ReportBadBlocks(ReportBadBlocksRequestProto) returns (ReportBadBlocksResponseProto);
+    rpc CommitBlockSynchronization(CommitBlockSynchronizationRequestProto) returns (CommitBlockSynchronizationResponseProto);
+}
+
+message RegisterDatanodeRequestProto {
+    DatanodeIDProto datanode_id = 1;
+    repeated StorageReportProto storage_reports = 2;
+    repeated string keys = 3;
+    string software_version = 4;
+}
+
+message RegisterDatanodeResponseProto {
+    DatanodeIDProto datanode_id = 1;
+    DatanodeCommandProto cmd = 2;
+}
+
+message BlockReportRequestProto {
+    DatanodeIDProto datanode_id = 1;
+    string block_pool_id = 2;
+    repeated StorageBlockReportProto reports = 3;
+    uint64 full_br_lease_id = 4;
+    bool sorted = 5;
+}
+
+message BlockReportResponseProto {
+    DatanodeCommandProto cmd = 1;
+}
+
+message BlockReceivedAndDeletedRequestProto {
+    DatanodeIDProto datanode_id = 1;
+    string block_pool_id = 2;
+    repeated StorageReceivedDeletedBlocksProto storage_blocks = 3;
+}
+
+message StorageReceivedDeletedBlocksProto {
+    string storage_uuid = 1;
+    repeated ReceivedDeletedBlockInfoProto blocks = 2;
+}
+
+message ReceivedDeletedBlockInfoProto {
+    BlockProto block = 1;
+    string delete_hint = 2;
+    
+    enum BlockStatus {
+        RECEIVING = 0;
+        RECEIVED = 1;
+        DELETED = 2;
+    }
+    BlockStatus status = 3;
+}
+
+message BlockReceivedAndDeletedResponseProto {
+}
+
+message ErrorReportRequestProto {
+    DatanodeIDProto datanode_id = 1;
+    int32 error_code = 2;
+    string msg = 3;
+}
+
+message ErrorReportResponseProto {
+}
+
+message ReportBadBlocksRequestProto {
+    repeated LocatedBlockProto blocks = 1;
+}
+
+message ReportBadBlocksResponseProto {
+}
+
+message CommitBlockSynchronizationRequestProto {
+    BlockProto block = 1;
+    uint64 new_gs = 2;
+    uint64 new_length = 3;
+    bool close_file = 4;
+    bool delete_block = 5;
+    repeated DatanodeIDProto new_targets = 6;
+    repeated string new_target_storages = 7;
+}
+
+message CommitBlockSynchronizationResponseProto {
+}
+

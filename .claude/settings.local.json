@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir:*)",
+      "Bash(node generate_pptx.js:*)",
+      "Bash(npm init:*)",
+      "Bash(npm install:*)",
+      "Bash(python /Users/yinyi/.claude/plugins/cache/anthropic-agent-skills/document-skills/69c0b1a06741/skills/pptx/scripts/thumbnail.py:*)",
+      "Bash(pip install:*)",
+      "Bash(unzip:*)"
+    ]
+  }
+}

@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mindb-codex"
+version = "0.1.0"
+description = "A mini MySQL-like database in Python (persistent storage, transactions, basic SQL)."
+readme = "README.md"
+requires-python = ">=3.13"
+license = { text = "MIT" }
+authors = [{ name = "mindb-codex" }]
+dependencies = []
+
+[project.scripts]
+mindb-codex = "mindb_codex.__main__:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+
+

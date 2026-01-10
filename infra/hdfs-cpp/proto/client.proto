@@ -1,0 +1,388 @@
+syntax = "proto3";
+
+package hdfs.proto;
+
+import "hdfs.proto";
+import "namenode.proto";
+
+// ============ Journal Node Protocol ============
+// Protocol for communication between NameNodes and JournalNodes
+// Used for HA (High Availability) to share edit logs
+
+service JournalProtocol {
+    // Format the journal
+    rpc Format(JournalFormatRequestProto) returns (JournalFormatResponseProto);
+    
+    // Journal edit operations
+    rpc Journal(JournalRequestProto) returns (JournalResponseProto);
+    
+    // Start a new log segment
+    rpc StartLogSegment(StartLogSegmentRequestProto) returns (StartLogSegmentResponseProto);
+    
+    // Finalize a log segment
+    rpc FinalizeLogSegment(FinalizeLogSegmentRequestProto) returns (FinalizeLogSegmentResponseProto);
+    
+    // Get edit log manifest
+    rpc GetEditLogManifest(GetEditLogManifestRequestProto) returns (GetEditLogManifestResponseProto);
+    
+    // Get journal state
+    rpc GetJournalState(GetJournalStateRequestProto) returns (GetJournalStateResponseProto);
+    
+    // Prepare recovery
+    rpc PrepareRecovery(PrepareRecoveryRequestProto) returns (PrepareRecoveryResponseProto);
+    
+    // Accept recovery
+    rpc AcceptRecovery(AcceptRecoveryRequestProto) returns (AcceptRecoveryResponseProto);
+    
+    // New epoch (fencing)
+    rpc NewEpoch(NewEpochRequestProto) returns (NewEpochResponseProto);
+    
+    // Is formatted
+    rpc IsFormatted(IsFormattedRequestProto) returns (IsFormattedResponseProto);
+    
+    // Do pre-upgrade
+    rpc DoPreUpgrade(DoPreUpgradeRequestProto) returns (DoPreUpgradeResponseProto);
+    
+    // Do upgrade
+    rpc DoUpgrade(DoUpgradeRequestProto) returns (DoUpgradeResponseProto);
+    
+    // Do finalize
+    rpc DoFinalize(DoFinalizeRequestProto) returns (DoFinalizeResponseProto);
+    
+    // Can roll back
+    rpc CanRollBack(CanRollBackRequestProto) returns (CanRollBackResponseProto);
+    
+    // Do roll back
+    rpc DoRollBack(DoRollBackRequestProto) returns (DoRollBackResponseProto);
+    
+    // Discard segments
+    rpc DiscardSegments(DiscardSegmentsRequestProto) returns (DiscardSegmentsResponseProto);
+    
+    // Get journal ctime
+    rpc GetJournalCTime(GetJournalCTimeRequestProto) returns (GetJournalCTimeResponseProto);
+}
+
+message JournalIdProto {
+    string identifier = 1;
+}
+
+message RequestInfoProto {
+    JournalIdProto journal_id = 1;
+    uint64 epoch = 2;
+    uint64 ipc_serial_number = 3;
+    uint64 committed_txid = 4;
+}
+
+message JournalFormatRequestProto {
+    JournalIdProto journal_id = 1;
+    NamespaceInfoProto ns_info = 2;
+}
+
+message JournalFormatResponseProto {
+}
+
+message NamespaceInfoProto {
+    string build_version = 1;
+    uint32 unused = 2;
+    string block_pool_id = 3;
+    string cluster_id = 4;
+    uint32 layout_version = 5;
+    uint32 namespace_id = 6;
+    uint64 ctime = 7;
+    string software_version = 8;
+    uint64 capabilities = 9;
+    string state = 10;
+}
+
+message JournalRequestProto {
+    RequestInfoProto req_info = 1;
+    uint64 first_txn_id = 2;
+    uint32 num_txns = 3;
+    bytes records = 4;
+    uint64 segment_txn_id = 5;
+}
+
+message JournalResponseProto {
+}
+
+message StartLogSegmentRequestProto {
+    RequestInfoProto req_info = 1;
+    uint64 txid = 2;
+    int32 layout_version = 3;
+}
+
+message StartLogSegmentResponseProto {
+}
+
+message FinalizeLogSegmentRequestProto {
+    RequestInfoProto req_info = 1;
+    uint64 start_txid = 2;
+    uint64 end_txid = 3;
+}
+
+message FinalizeLogSegmentResponseProto {
+}
+
+message GetEditLogManifestRequestProto {
+    JournalIdProto jid = 1;
+    uint64 since_txid = 2;
+    bool in_progress_ok = 3;
+}
+
+message GetEditLogManifestResponseProto {
+    RemoteEditLogManifestProto manifest = 1;
+    uint64 http_port = 2;
+    bool is_in_progress = 3;
+}
+
+message RemoteEditLogManifestProto {
+    repeated RemoteEditLogProto logs = 1;
+    uint64 committed_txn_id = 2;
+}
+
+message RemoteEditLogProto {
+    uint64 start_txid = 1;
+    uint64 end_txid = 2;
+    bool is_in_progress = 3;
+}
+
+message GetJournalStateRequestProto {
+    JournalIdProto jid = 1;
+}
+
+message GetJournalStateResponseProto {
+    uint64 last_promised_epoch = 1;
+    uint64 http_port = 2;
+    uint64 from_url = 3;
+}
+
+message PrepareRecoveryRequestProto {
+    RequestInfoProto req_info = 1;
+    uint64 segment_txid = 2;
+}
+
+message PrepareRecoveryResponseProto {
+    SegmentStateProto segment_state = 1;
+    uint64 accepted_in_epoch = 2;
+    uint64 last_writer_epoch = 3;
+}
+
+message SegmentStateProto {
+    uint64 start_txid = 1;
+    uint64 end_txid = 2;
+    bool is_in_progress = 3;
+}
+
+message AcceptRecoveryRequestProto {
+    RequestInfoProto req_info = 1;
+    SegmentStateProto state_to_accept = 2;
+    string from_url = 3;
+}
+
+message AcceptRecoveryResponseProto {
+}
+
+message NewEpochRequestProto {
+    JournalIdProto jid = 1;
+    NamespaceInfoProto ns_info = 2;
+    uint64 epoch = 3;
+}
+
+message NewEpochResponseProto {
+    uint64 last_segment_txid = 1;
+}
+
+message IsFormattedRequestProto {
+    JournalIdProto jid = 1;
+}
+
+message IsFormattedResponseProto {
+    bool is_formatted = 1;
+}
+
+message DoPreUpgradeRequestProto {
+    JournalIdProto jid = 1;
+}
+
+message DoPreUpgradeResponseProto {
+}
+
+message DoUpgradeRequestProto {
+    JournalIdProto jid = 1;
+    StorageInfoProto s_info = 2;
+}
+
+message StorageInfoProto {
+    uint32 layout_version = 1;
+    uint32 namespace_id = 2;
+    string cluster_id = 3;
+    uint64 ctime = 4;
+}
+
+message DoUpgradeResponseProto {
+}
+
+message DoFinalizeRequestProto {
+    JournalIdProto jid = 1;
+}
+
+message DoFinalizeResponseProto {
+}
+
+message CanRollBackRequestProto {
+    JournalIdProto jid = 1;
+    StorageInfoProto storage = 2;
+    StorageInfoProto prev_storage = 3;
+    int32 target_layout_version = 4;
+}
+
+message CanRollBackResponseProto {
+    bool can_rollback = 1;
+}
+
+message DoRollBackRequestProto {
+    JournalIdProto jid = 1;
+}
+
+message DoRollBackResponseProto {
+}
+
+message DiscardSegmentsRequestProto {
+    JournalIdProto jid = 1;
+    uint64 start_txid = 2;
+}
+
+message DiscardSegmentsResponseProto {
+}
+
+message GetJournalCTimeRequestProto {
+    JournalIdProto jid = 1;
+}
+
+message GetJournalCTimeResponseProto {
+    int64 result_ctime = 1;
+}
+
+// ============ HA ZK Failover Controller Protocol ============
+
+service ZKFCProtocol {
+    rpc CedeActive(CedeActiveRequestProto) returns (CedeActiveResponseProto);
+    rpc GracefulFailover(GracefulFailoverRequestProto) returns (GracefulFailoverResponseProto);
+}
+
+message CedeActiveRequestProto {
+    uint32 millisToCede = 1;
+}
+
+message CedeActiveResponseProto {
+}
+
+message GracefulFailoverRequestProto {
+}
+
+message GracefulFailoverResponseProto {
+}
+
+// ============ Federation Router Protocol ============
+
+service RouterProtocol {
+    // Get mount table entries
+    rpc GetMountTableEntries(GetMountTableEntriesRequestProto) returns (GetMountTableEntriesResponseProto);
+    
+    // Add mount table entry
+    rpc AddMountTableEntry(AddMountTableEntryRequestProto) returns (AddMountTableEntryResponseProto);
+    
+    // Update mount table entry
+    rpc UpdateMountTableEntry(UpdateMountTableEntryRequestProto) returns (UpdateMountTableEntryResponseProto);
+    
+    // Remove mount table entry
+    rpc RemoveMountTableEntry(RemoveMountTableEntryRequestProto) returns (RemoveMountTableEntryResponseProto);
+    
+    // Get destination for path
+    rpc GetDestination(GetDestinationRequestProto) returns (GetDestinationResponseProto);
+    
+    // Refresh mount table cache
+    rpc RefreshMountTableEntries(RefreshMountTableEntriesRequestProto) returns (RefreshMountTableEntriesResponseProto);
+}
+
+message MountTableProto {
+    string src_path = 1;
+    repeated RemoteLocationProto destinations = 2;
+    uint64 date_created = 3;
+    uint64 date_modified = 4;
+    bool read_only = 5;
+    
+    enum DestOrder {
+        HASH = 0;
+        LOCAL = 1;
+        RANDOM = 2;
+        HASH_ALL = 3;
+        SPACE = 4;
+    }
+    DestOrder dest_order = 6;
+    string owner_name = 7;
+    string group_name = 8;
+    uint32 mode = 9;
+    QuotaUsageProto quota = 10;
+}
+
+message RemoteLocationProto {
+    string nameservice_id = 1;
+    string dest_path = 2;
+}
+
+message QuotaUsageProto {
+    uint64 file_and_dir_count = 1;
+    uint64 quota = 2;
+    uint64 space_consumed = 3;
+    uint64 space_quota = 4;
+}
+
+message GetMountTableEntriesRequestProto {
+    string src_path = 1;
+}
+
+message GetMountTableEntriesResponseProto {
+    repeated MountTableProto entries = 1;
+    uint64 timestamp = 2;
+}
+
+message AddMountTableEntryRequestProto {
+    MountTableProto entry = 1;
+}
+
+message AddMountTableEntryResponseProto {
+    bool status = 1;
+}
+
+message UpdateMountTableEntryRequestProto {
+    MountTableProto entry = 1;
+}
+
+message UpdateMountTableEntryResponseProto {
+    bool status = 1;
+}
+
+message RemoveMountTableEntryRequestProto {
+    string src_path = 1;
+}
+
+message RemoveMountTableEntryResponseProto {
+    bool status = 1;
+}
+
+message GetDestinationRequestProto {
+    string src_path = 1;
+}
+
+message GetDestinationResponseProto {
+    repeated string destinations = 1;
+}
+
+message RefreshMountTableEntriesRequestProto {
+}
+
+message RefreshMountTableEntriesResponseProto {
+    bool result = 1;
+}
+

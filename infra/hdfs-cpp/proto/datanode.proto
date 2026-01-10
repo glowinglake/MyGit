@@ -1,0 +1,249 @@
+syntax = "proto3";
+
+package hdfs.proto;
+
+import "hdfs.proto";
+
+// ============ DataNode Data Transfer Protocol ============
+// This is the protocol for transferring block data between
+// clients and DataNodes, and between DataNodes themselves.
+
+service DataTransferProtocol {
+    // Read a block
+    rpc ReadBlock(ReadBlockRequestProto) returns (stream DataChunkProto);
+    
+    // Write a block (streaming)
+    rpc WriteBlock(stream WriteBlockRequestProto) returns (WriteBlockResponseProto);
+    
+    // Transfer a block to another DataNode (for replication)
+    rpc TransferBlock(TransferBlockRequestProto) returns (TransferBlockResponseProto);
+    
+    // Copy a block from another DataNode
+    rpc CopyBlock(CopyBlockRequestProto) returns (CopyBlockResponseProto);
+    
+    // Replace a block with new generation stamp
+    rpc ReplaceBlock(ReplaceBlockRequestProto) returns (ReplaceBlockResponseProto);
+    
+    // Get block checksum
+    rpc GetBlockChecksum(GetBlockChecksumRequestProto) returns (GetBlockChecksumResponseProto);
+    
+    // Get short-circuit read info
+    rpc GetShortCircuitFds(GetShortCircuitFdsRequestProto) returns (GetShortCircuitFdsResponseProto);
+}
+
+// ============ Data Transfer Messages ============
+
+message ClientOperationHeaderProto {
+    BaseHeaderProto base_header = 1;
+    string client_name = 2;
+}
+
+message BaseHeaderProto {
+    BlockProto block = 1;
+    bytes block_token = 2;
+}
+
+message DataChunkProto {
+    bytes data = 1;
+    bytes checksums = 2;
+    uint64 offset_in_block = 3;
+    bool last_chunk = 4;
+}
+
+message PacketHeaderProto {
+    uint64 offset_in_block = 1;
+    uint64 seqno = 2;
+    bool last_packet_in_block = 3;
+    uint32 data_len = 4;
+    bool sync_block = 5;
+}
+
+message PipelineAckProto {
+    uint64 seqno = 1;
+    repeated Status reply = 2;
+    uint64 downstream_ack_time_nanos = 3;
+    repeated uint32 flags = 4;
+    
+    enum Status {
+        SUCCESS = 0;
+        ERROR = 1;
+        ERROR_CHECKSUM = 2;
+        ERROR_INVALID = 3;
+        ERROR_EXISTS = 4;
+        ERROR_ACCESS_TOKEN = 5;
+        CHECKSUM_OK = 6;
+        ERROR_UNSUPPORTED = 7;
+        OOB_RESTART = 8;
+        OOB_RESERVED1 = 9;
+        OOB_RESERVED2 = 10;
+        OOB_RESERVED3 = 11;
+        IN_PROGRESS = 12;
+        ERROR_BLOCK_PINNED = 13;
+    }
+}
+
+message ReadBlockRequestProto {
+    ClientOperationHeaderProto header = 1;
+    uint64 offset = 2;
+    uint64 len = 3;
+    bool send_checksums = 4;
+    CachingStrategyProto caching_strategy = 5;
+}
+
+message CachingStrategyProto {
+    bool drop_behind = 1;
+    int64 readahead = 2;
+}
+
+message WriteBlockRequestProto {
+    ClientOperationHeaderProto header = 1;
+    repeated DatanodeInfoProto targets = 2;
+    DatanodeInfoProto source = 3;
+    
+    enum BlockConstructionStage {
+        PIPELINE_SETUP_APPEND = 0;
+        PIPELINE_SETUP_APPEND_RECOVERY = 1;
+        DATA_STREAMING = 2;
+        PIPELINE_SETUP_STREAMING_RECOVERY = 3;
+        PIPELINE_CLOSE = 4;
+        PIPELINE_CLOSE_RECOVERY = 5;
+        PIPELINE_SETUP_CREATE = 6;
+    }
+    BlockConstructionStage stage = 4;
+    
+    uint32 pipeline_size = 5;
+    uint64 min_bytes_rcvd = 6;
+    uint64 max_bytes_rcvd = 7;
+    uint64 latest_generation_stamp = 8;
+    ChecksumProto requested_checksum = 9;
+    CachingStrategyProto caching_strategy = 10;
+    string storage_type = 11;
+    repeated string target_storage_types = 12;
+    bool allow_lazy_persist = 13;
+    bool pinning = 14;
+    repeated bool target_pinnings = 15;
+    string storage_id = 16;
+    repeated string target_storage_ids = 17;
+    
+    // Data packets follow in the stream
+    bytes data = 20;
+    PacketHeaderProto packet_header = 21;
+}
+
+message WriteBlockResponseProto {
+    PipelineAckProto ack = 1;
+    DatanodeInfoProto first_bad_link = 2;
+}
+
+message ChecksumProto {
+    enum ChecksumType {
+        CHECKSUM_NULL = 0;
+        CHECKSUM_CRC32 = 1;
+        CHECKSUM_CRC32C = 2;
+    }
+    ChecksumType type = 1;
+    uint32 bytes_per_checksum = 2;
+}
+
+message TransferBlockRequestProto {
+    ClientOperationHeaderProto header = 1;
+    repeated DatanodeInfoProto targets = 2;
+    repeated string target_storage_types = 3;
+    repeated string target_storage_ids = 4;
+}
+
+message TransferBlockResponseProto {
+    PipelineAckProto.Status status = 1;
+}
+
+message CopyBlockRequestProto {
+    ClientOperationHeaderProto header = 1;
+}
+
+message CopyBlockResponseProto {
+    PipelineAckProto.Status status = 1;
+}
+
+message ReplaceBlockRequestProto {
+    ClientOperationHeaderProto header = 1;
+    string del_hint = 2;
+    DatanodeInfoProto source = 3;
+    string storage_type = 4;
+    string storage_id = 5;
+}
+
+message ReplaceBlockResponseProto {
+    PipelineAckProto.Status status = 1;
+}
+
+message GetBlockChecksumRequestProto {
+    ClientOperationHeaderProto header = 1;
+}
+
+message GetBlockChecksumResponseProto {
+    uint32 bytes_per_crc = 1;
+    uint64 crc_per_block = 2;
+    bytes md5 = 3;
+    ChecksumProto.ChecksumType crc_type = 4;
+}
+
+message GetShortCircuitFdsRequestProto {
+    ClientOperationHeaderProto header = 1;
+    uint32 max_version = 2;
+    repeated bytes slot_id = 3;
+    bool supports_receipt_verification = 4;
+}
+
+message GetShortCircuitFdsResponseProto {
+    enum ShortCircuitFdResponse {
+        SUCCESS = 0;
+        ERROR_UNSUPPORTED = 1;
+        ERROR_ACCESS_TOKEN = 2;
+        ERROR_INVALID = 3;
+    }
+    ShortCircuitFdResponse status = 1;
+    repeated bytes slot_ids = 2;
+}
+
+// ============ Inter-DataNode Protocol ============
+
+service InterDatanodeProtocol {
+    // Initialize a replica for recovery
+    rpc InitReplicaRecovery(InitReplicaRecoveryRequestProto) returns (InitReplicaRecoveryResponseProto);
+    
+    // Update replica under recovery
+    rpc UpdateReplicaUnderRecovery(UpdateReplicaUnderRecoveryRequestProto) returns (UpdateReplicaUnderRecoveryResponseProto);
+}
+
+message InitReplicaRecoveryRequestProto {
+    BlockProto block = 1;
+}
+
+message ReplicaRecoveryInfoProto {
+    enum ReplicaState {
+        FINALIZED = 0;
+        RBW = 1;
+        RWR = 2;
+        RUR = 3;
+        TEMPORARY = 4;
+    }
+    BlockProto block = 1;
+    ReplicaState state = 2;
+    bool truncate_flag = 3;
+}
+
+message InitReplicaRecoveryResponseProto {
+    bool replica_found = 1;
+    ReplicaRecoveryInfoProto info = 2;
+}
+
+message UpdateReplicaUnderRecoveryRequestProto {
+    BlockProto block = 1;
+    uint64 recovery_id = 2;
+    uint64 new_length = 3;
+}
+
+message UpdateReplicaUnderRecoveryResponseProto {
+    string storage_uuid = 1;
+}
+

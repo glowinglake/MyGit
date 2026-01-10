@@ -1,0 +1,431 @@
+syntax = "proto3";
+
+package hdfs.proto;
+
+option cc_generic_services = false;
+
+// ============ Common Types ============
+
+message BlockProto {
+    uint64 block_id = 1;
+    uint64 generation_stamp = 2;
+    uint64 num_bytes = 3;
+    string block_pool_id = 4;
+}
+
+message DatanodeIDProto {
+    string datanode_uuid = 1;
+    string ip_addr = 2;
+    string hostname = 3;
+    uint32 xfer_port = 4;
+    uint32 info_port = 5;
+    uint32 ipc_port = 6;
+    uint32 info_secure_port = 7;
+}
+
+message DatanodeInfoProto {
+    DatanodeIDProto id = 1;
+    uint64 capacity = 2;
+    uint64 dfs_used = 3;
+    uint64 remaining = 4;
+    uint64 block_pool_used = 5;
+    uint64 last_update = 6;
+    uint32 xceiver_count = 7;
+    string location = 8;
+    
+    enum AdminState {
+        NORMAL = 0;
+        DECOMMISSION_INPROGRESS = 1;
+        DECOMMISSIONED = 2;
+        ENTERING_MAINTENANCE = 3;
+        IN_MAINTENANCE = 4;
+    }
+    AdminState admin_state = 9;
+    uint64 cache_capacity = 10;
+    uint64 cache_used = 11;
+    uint64 last_update_monotonic = 12;
+    string software_version = 13;
+    string upgrade_domain = 14;
+    uint64 last_block_report_time = 15;
+    uint64 last_block_report_monotonic = 16;
+    uint32 num_blocks = 17;
+}
+
+message LocatedBlockProto {
+    BlockProto block = 1;
+    uint64 offset = 2;
+    repeated DatanodeInfoProto locs = 3;
+    bool corrupt = 4;
+    
+    enum BlockTokenSecretProto {
+        COPY = 0;
+        REPLACE = 1;
+    }
+    bytes block_token = 5;
+    repeated bool is_cached = 6;
+    repeated string storage_types = 7;
+    repeated string storage_ids = 8;
+}
+
+message LocatedBlocksProto {
+    uint64 file_length = 1;
+    repeated LocatedBlockProto blocks = 2;
+    bool under_construction = 3;
+    LocatedBlockProto last_block = 4;
+    bool is_last_block_complete = 5;
+}
+
+message FileStatusProto {
+    enum FileType {
+        IS_DIR = 0;
+        IS_FILE = 1;
+        IS_SYMLINK = 2;
+    }
+    FileType file_type = 1;
+    string path = 2;
+    uint64 length = 3;
+    uint32 permission = 4;
+    string owner = 5;
+    string group = 6;
+    uint64 modification_time = 7;
+    uint64 access_time = 8;
+    string symlink = 9;
+    uint32 block_replication = 10;
+    uint64 block_size = 11;
+    LocatedBlocksProto locations = 12;
+    uint64 file_id = 13;
+    int32 children_num = 14;
+    bytes encryption_data = 15;
+    uint32 storage_policy = 16;
+    bytes ec_policy = 17;
+    uint32 flags = 18;
+}
+
+message ContentSummaryProto {
+    uint64 length = 1;
+    uint64 file_count = 2;
+    uint64 directory_count = 3;
+    uint64 quota = 4;
+    uint64 space_consumed = 5;
+    uint64 space_quota = 6;
+    uint64 type_quota_infos = 7;
+    uint64 snapshot_length = 8;
+    uint64 snapshot_file_count = 9;
+    uint64 snapshot_directory_count = 10;
+    uint64 snapshot_space_consumed = 11;
+    string erasure_coding_policy = 12;
+}
+
+message FsStatusProto {
+    uint64 capacity = 1;
+    uint64 used = 2;
+    uint64 remaining = 3;
+    uint64 under_replicated = 4;
+    uint64 corrupt_blocks = 5;
+    uint64 missing_blocks = 6;
+    uint64 missing_repl_one_blocks = 7;
+    uint64 blocks_in_future = 8;
+    uint64 pending_deletion_blocks = 9;
+}
+
+message SnapshotInfoProto {
+    string snapshot_root = 1;
+    string snapshot_name = 2;
+    uint64 create_time = 3;
+    uint32 permission = 4;
+    string owner = 5;
+    string group = 6;
+}
+
+// ============ INode Types ============
+
+message INodeFileProto {
+    uint32 replication = 1;
+    uint64 modification_time = 2;
+    uint64 access_time = 3;
+    uint64 preferred_block_size = 4;
+    uint32 permission = 5;
+    repeated BlockProto blocks = 6;
+    uint32 storage_policy_id = 7;
+    bool is_striped = 8;
+}
+
+message INodeDirectoryProto {
+    uint64 modification_time = 1;
+    uint64 ns_quota = 2;
+    uint64 ds_quota = 3;
+    uint32 permission = 4;
+}
+
+message INodeSymlinkProto {
+    uint32 permission = 1;
+    string target = 2;
+    uint64 modification_time = 3;
+    uint64 access_time = 4;
+}
+
+message INodeProto {
+    enum Type {
+        FILE = 0;
+        DIRECTORY = 1;
+        SYMLINK = 2;
+    }
+    Type type = 1;
+    uint64 id = 2;
+    bytes name = 3;
+    
+    oneof content {
+        INodeFileProto file = 4;
+        INodeDirectoryProto directory = 5;
+        INodeSymlinkProto symlink = 6;
+    }
+}
+
+// ============ Edit Log Operations ============
+
+message EditLogOpProto {
+    enum OpCode {
+        OP_INVALID = 0;
+        OP_ADD = 1;
+        OP_RENAME_OLD = 2;
+        OP_DELETE = 3;
+        OP_MKDIR = 4;
+        OP_SET_REPLICATION = 5;
+        OP_SET_PERMISSIONS = 6;
+        OP_SET_OWNER = 7;
+        OP_CLOSE = 8;
+        OP_SET_GENSTAMP = 9;
+        OP_SET_NS_QUOTA = 10;
+        OP_CLEAR_NS_QUOTA = 11;
+        OP_TIMES = 12;
+        OP_SET_QUOTA = 13;
+        OP_RENAME = 14;
+        OP_CONCAT_DELETE = 15;
+        OP_SYMLINK = 16;
+        OP_UPDATE_BLOCKS = 17;
+        OP_CREATE_SNAPSHOT = 18;
+        OP_DELETE_SNAPSHOT = 19;
+        OP_RENAME_SNAPSHOT = 20;
+        OP_ALLOW_SNAPSHOT = 21;
+        OP_DISALLOW_SNAPSHOT = 22;
+        OP_ADD_BLOCK = 23;
+        OP_TRUNCATE = 24;
+        OP_START_LOG_SEGMENT = 25;
+        OP_END_LOG_SEGMENT = 26;
+    }
+    
+    OpCode op_code = 1;
+    uint64 txid = 2;
+    
+    oneof op_data {
+        AddOpProto add_op = 10;
+        RenameOpProto rename_op = 11;
+        DeleteOpProto delete_op = 12;
+        MkdirOpProto mkdir_op = 13;
+        SetReplicationOpProto set_repl_op = 14;
+        SetPermissionsOpProto set_perm_op = 15;
+        SetOwnerOpProto set_owner_op = 16;
+        CloseOpProto close_op = 17;
+        TimesOpProto times_op = 18;
+        AddBlockOpProto add_block_op = 19;
+        SnapshotOpProto snapshot_op = 20;
+    }
+}
+
+message AddOpProto {
+    string path = 1;
+    uint64 inode_id = 2;
+    uint32 replication = 3;
+    uint64 block_size = 4;
+    uint64 mtime = 5;
+    uint64 atime = 6;
+    uint32 permission = 7;
+    string owner = 8;
+    string group = 9;
+    string client_name = 10;
+    string client_machine = 11;
+    bool overwrite = 12;
+}
+
+message RenameOpProto {
+    string src = 1;
+    string dst = 2;
+    uint64 timestamp = 3;
+}
+
+message DeleteOpProto {
+    string path = 1;
+    uint64 timestamp = 2;
+    bool recursive = 3;
+}
+
+message MkdirOpProto {
+    string path = 1;
+    uint64 inode_id = 2;
+    uint64 mtime = 3;
+    uint32 permission = 4;
+    string owner = 5;
+    string group = 6;
+}
+
+message SetReplicationOpProto {
+    string path = 1;
+    uint32 replication = 2;
+}
+
+message SetPermissionsOpProto {
+    string path = 1;
+    uint32 permission = 2;
+}
+
+message SetOwnerOpProto {
+    string path = 1;
+    string owner = 2;
+    string group = 3;
+}
+
+message CloseOpProto {
+    string path = 1;
+    uint64 mtime = 2;
+    uint64 length = 3;
+    repeated BlockProto blocks = 4;
+}
+
+message TimesOpProto {
+    string path = 1;
+    uint64 mtime = 2;
+    uint64 atime = 3;
+}
+
+message AddBlockOpProto {
+    string path = 1;
+    BlockProto block = 2;
+}
+
+message SnapshotOpProto {
+    string snapshot_root = 1;
+    string snapshot_name = 2;
+    string new_name = 3;  // for rename
+}
+
+// ============ FSImage ============
+
+message FSImageSectionProto {
+    enum SectionName {
+        NS_INFO = 0;
+        INODE = 1;
+        INODE_DIR = 2;
+        FILES_UNDERCONSTRUCTION = 3;
+        SNAPSHOT = 4;
+        SNAPSHOT_DIFF = 5;
+        SECRET_MANAGER = 6;
+        CACHE_MANAGER = 7;
+        STRING_TABLE = 8;
+        ERASURE_CODING = 9;
+    }
+    
+    SectionName name = 1;
+    uint64 length = 2;
+    uint64 offset = 3;
+}
+
+message FSImageHeaderProto {
+    uint64 ondisk_version = 1;
+    uint64 layout_version = 2;
+    string codec = 3;
+    repeated FSImageSectionProto sections = 4;
+}
+
+message NameSystemSectionProto {
+    uint32 namespace_id = 1;
+    uint64 genstamp = 2;
+    uint64 last_allocated_block_id = 3;
+    uint64 last_allocated_stripe_block_id = 4;
+    uint64 transaction_id = 5;
+    uint64 rolling_upgrade_start_time = 6;
+    uint64 last_allocated_inode_id = 7;
+}
+
+message INodeSectionProto {
+    uint64 last_inode_id = 1;
+    uint64 num_inodes = 2;
+    repeated INodeProto inodes = 3;
+}
+
+message INodeDirectorySectionProto {
+    message DirEntry {
+        uint64 parent = 1;
+        repeated uint64 children = 2;
+    }
+    repeated DirEntry dir_entries = 1;
+}
+
+// ============ Block Report ============
+
+message BlockReportProto {
+    string block_pool_id = 1;
+    repeated BlockProto blocks = 2;
+}
+
+message StorageBlockReportProto {
+    string storage_uuid = 1;
+    repeated BlockProto blocks = 2;
+}
+
+message HeartbeatRequestProto {
+    DatanodeIDProto datanode_id = 1;
+    repeated StorageReportProto reports = 2;
+    uint32 xceiver_count = 3;
+    uint32 cache_capacity = 4;
+    uint32 cache_used = 5;
+    uint32 failed_volumes = 6;
+    uint64 volume_failure_summary = 7;
+    bool request_full_block_report_lease = 8;
+}
+
+message StorageReportProto {
+    string storage_uuid = 1;
+    bool failed = 2;
+    uint64 capacity = 3;
+    uint64 dfs_used = 4;
+    uint64 remaining = 5;
+    uint64 block_pool_used = 6;
+    string storage_type = 7;
+    uint64 non_dfs_used = 8;
+}
+
+message HeartbeatResponseProto {
+    repeated DatanodeCommandProto cmds = 1;
+    bool ha_status_active = 2;
+    uint64 full_block_report_lease_id = 3;
+}
+
+message DatanodeCommandProto {
+    enum Type {
+        UNKNOWN = 0;
+        REGISTER = 1;
+        TRANSFER_BLOCK = 2;
+        INVALIDATE_BLOCK = 3;
+        DELETE_BLOCK = 4;
+        SHUTDOWN = 5;
+        FINALIZE = 6;
+        RECOVERBLOCK = 7;
+        ERASURE_CODING = 8;
+    }
+    
+    Type cmd_type = 1;
+    BlockCommandProto block_cmd = 2;
+    BalancerBandwidthCommandProto balancer_cmd = 3;
+}
+
+message BlockCommandProto {
+    repeated BlockProto blocks = 1;
+    repeated DatanodeInfoProto targets = 2;
+    repeated string target_storage_types = 3;
+    repeated string target_storage_ids = 4;
+}
+
+message BalancerBandwidthCommandProto {
+    uint64 bandwidth = 1;
+}
+

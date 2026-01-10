@@ -1,0 +1,9 @@
+# MiniDB Requirements
+# Core: No external dependencies required!
+# The database is built entirely with Python standard library.
+
+# Optional dependencies for enhanced user experience:
+# prompt_toolkit>=3.0.0  # Enhanced REPL with syntax highlighting
+# rich>=13.0.0           # Pretty table output
+# pytest>=7.0.0          # Better test runner
+
